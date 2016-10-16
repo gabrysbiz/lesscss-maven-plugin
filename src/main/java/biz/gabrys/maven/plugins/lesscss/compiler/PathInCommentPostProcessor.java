@@ -22,7 +22,7 @@ public class PathInCommentPostProcessor implements PostCompilationProcessor {
     private final String classPattern;
 
     public PathInCommentPostProcessor(final String className) {
-        final StringBuilder pattern = new StringBuilder();
+        final StringBuilder pattern = new StringBuilder(100);
         pattern.append("\\.");
         pattern.append(Pattern.quote(className));
         pattern.append("-(\\d)+(\\s)*\\{(\\s)*name:(\\s)*\"");

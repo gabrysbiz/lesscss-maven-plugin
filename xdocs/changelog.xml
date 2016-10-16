@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Changelog</title>
+    </properties>
+
+    <body>
+        <section id="release-1.1" name="Release 1.1">
+            <p>Dependencies:</p>
+            <ul>
+                <li>
+                    Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                    from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/1.0/">1.0</a>
+                    to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
+                </li>
+            </ul>
+        </section>
+        <section id="release-1.0" name="Release 1.0">
+            <p>Initial release.</p>
+            <p><a href="http://lesscss-maven-plugin.projects.gabrys.biz/1.0/">See documentation</a></p>
+        </section>
+    </body>
+</document>
