@@ -91,7 +91,7 @@
 <a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">     * Forces the &lt;a href="<a href="http://lesscss.org/" target="alexandria_uri">http://lesscss.org/</a>"&gt;Less&lt;/a&gt; compiler to always compile the</em>
 <a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">     * &lt;a href="<a href="http://lesscss.org/" target="alexandria_uri">http://lesscss.org/</a>"&gt;Less&lt;/a&gt; sources. By default &lt;a href="<a href="http://lesscss.org/" target="alexandria_uri">http://lesscss.org/</a>"&gt;Less&lt;/a&gt; sources are</em>
 <a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">     * only compiled when modified (including imports) or the &lt;a href="<a href="http://www.w3.org/Style/CSS/" target="alexandria_uri">http://www.w3.org/Style/CSS/</a>"&gt;CSS&lt;/a&gt; stylesheet</em>
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">     * does not exists.&lt;br&gt;</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">     * does not exist.&lt;br&gt;</em>
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment">     * &lt;b&gt;Notice&lt;/b&gt;: always false when &lt;a href="#watch"&gt;watch&lt;/a&gt; is equal to true.</em>
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>  <em class="jxr_javadoccomment">     * @since 1.0</em>
 <a class="jxr_linenumber" name="L89" href="#L89">89</a>  <em class="jxr_javadoccomment">     */</em>
@@ -366,8 +366,8 @@
 <a class="jxr_linenumber" name="L358" href="#L358">358</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> compileFiles(<strong class="jxr_keyword">final</strong> Collection&lt;File&gt; files) <strong class="jxr_keyword">throws</strong> MojoFailureException {
 <a class="jxr_linenumber" name="L359" href="#L359">359</a>         <strong class="jxr_keyword">final</strong> <a href="../../../../../biz/gabrys/maven/plugins/lesscss/compiler/PluginCompiler.html">PluginCompiler</a> compiler = createCompiler();
 <a class="jxr_linenumber" name="L360" href="#L360">360</a>         <strong class="jxr_keyword">final</strong> CompilerOptions options = createOptions();
-<a class="jxr_linenumber" name="L361" href="#L361">361</a>         <strong class="jxr_keyword">final</strong> String sourceFilesText = <span class="jxr_string">"source file"</span> + (files.size() != 1 ? <span class="jxr_string">"s"</span> : <span class="jxr_string">""</span>);
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>         getLog().info(String.format(<span class="jxr_string">"Compiling %s %s to %s"</span>, +files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>         <strong class="jxr_keyword">final</strong> String sourceFilesText = <span class="jxr_string">"source"</span> + (files.size() != 1 ? <span class="jxr_string">"s"</span> : <span class="jxr_string">""</span>);
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>         getLog().info(String.format(<span class="jxr_string">"Compiling %s %s to %s"</span>, files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
 <a class="jxr_linenumber" name="L363" href="#L363">363</a>         <strong class="jxr_keyword">final</strong> Timer timer = SystemTimer.getStartedTimer();
 <a class="jxr_linenumber" name="L364" href="#L364">364</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> File file : files) {
 <a class="jxr_linenumber" name="L365" href="#L365">365</a>             compileFile(compiler, options, file);
@@ -436,7 +436,7 @@
 <a class="jxr_linenumber" name="L428" href="#L428">428</a>         }
 <a class="jxr_linenumber" name="L429" href="#L429">429</a>         <strong class="jxr_keyword">final</strong> String compiled = compiler.compile(<strong class="jxr_keyword">new</strong> LocalSource(source, encoding), options);
 <a class="jxr_linenumber" name="L430" href="#L430">430</a>         saveCompiledCode(source, compiled, compiler.getCompilationDate());
-<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <strong class="jxr_keyword">if</strong> (verbose) {
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <strong class="jxr_keyword">if</strong> (timer != <strong class="jxr_keyword">null</strong>) {
 <a class="jxr_linenumber" name="L432" href="#L432">432</a>             getLog().info(<span class="jxr_string">"Finished in "</span> + timer.stop());
 <a class="jxr_linenumber" name="L433" href="#L433">433</a>         }
 <a class="jxr_linenumber" name="L434" href="#L434">434</a>     }
