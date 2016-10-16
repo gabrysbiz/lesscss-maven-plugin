@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+    title="Frequently Asked Questions">
+    
+    <part id="compilation">
+        <title>Compilation</title>
+        <faq id="stack-overflow-error">
+            <question>
+                How to solve the java.lang.StackOverflowError Exception in main thread?
+            </question>
+            <answer>
+                <p>
+                    This error occurs in the Third-Party dependence (<a href="https://developer.mozilla.org/en/Rhino">Rhino</a>)
+                    when the sources are very complex. To solve this problem you need to add <code>-Xss</code> argument
+                    to increase the maximum stack size.
+                </p>
+                <p>Example:</p>
+                <source>mvn -Xss1m biz.gabrys.maven.plugins:lesscss-maven-plugin:compile</source>
+            </answer>
+        </faq>
+        <faq id="output-css-to-source-directory">
+            <question>
+                Can CSS files be save in the directory with Less sources?
+            </question>
+            <answer>
+                <p>
+                    Yes. Generated CSS files can be save in the source directory.
+                    You need to set the same path in the <a href="compile-mojo.html#sourceDirectory">sourceDirectory</a>
+                    and <a href="compile-mojo.html#outputDirectory">outputDirectory</a> parameters.
+                </p>
+                <p>Example:</p>
+                <source>&lt;configuration&gt;
+   &lt;sourceDirectory&gt;src/main/less&lt;/sourceDirectory&gt;
+   &lt;outputDirectory&gt;src/main/less&lt;/outputDirectory&gt;
+   ...
+&lt;/configuration&gt;</source>
+            </answer>
+        </faq>
+    </part>
+
+    <part id="ide">
+        <title>Integrated Development Environment</title>
+        <faq id="how-to-disable-auto-compilation-in-eclipse">
+            <question>
+                How to disable auto compilation in the Eclipse IDE?
+            </question>
+            <answer>
+                <p>
+                    <a href="http://www.eclipse.org/m2e/">M2Eclipse</a> is an Eclipse plugin which provides tight integration for Maven.
+                    It determines who and when plugins should be executed. Each plugin can store lifecycle mapping metadata with data
+                    on which it based its decision
+                    (see <a href="https://wiki.eclipse.org/M2E_compatible_maven_plugins#Overview">M2E compatible maven plugins</a>).
+                    By default this plugin is called on incremental builds. If you want to disable automatic compilation, then you need to add
+                    the following entry to your pom.xml:
+                </p>
+                <source>&lt;pluginManagement&gt;
+   &lt;plugins&gt;
+      &lt;plugin&gt;
+         &lt;groupId&gt;org.eclipse.m2e&lt;/groupId&gt;
+         &lt;artifactId&gt;lifecycle-mapping&lt;/artifactId&gt;
+         &lt;version&gt;1.0.0&lt;/version&gt;
+         &lt;configuration&gt;
+            &lt;lifecycleMappingMetadata&gt;
+               &lt;pluginExecutions&gt;
+                  &lt;pluginExecution&gt;
+                     &lt;pluginExecutionFilter&gt;
+                        &lt;groupId&gt;biz.gabrys.maven.plugins&lt;/groupId&gt;
+                        &lt;artifactId&gt;lesscss-maven-plugin&lt;/artifactId&gt;
+                        &lt;versionRange&gt;[0,)&lt;/versionRange&gt;
+                        &lt;goals&gt;
+                           &lt;goal&gt;compile&lt;/goal&gt;
+                        &lt;/goals&gt;
+                     &lt;/pluginExecutionFilter&gt;
+                     &lt;action&gt;
+                        &lt;ignore /&gt;
+                     &lt;/action&gt;
+                  &lt;/pluginExecution&gt;
+               &lt;/pluginExecutions&gt;
+            &lt;/lifecycleMappingMetadata&gt;
+         &lt;/configuration&gt;
+      &lt;/plugin&gt;
+   &lt;/plugins&gt;
+&lt;/pluginManagement&gt;</source>
+            </answer>
+        </faq>
+    </part>
+</faqs>

@@ -1,0 +1,458 @@
+/*
+ * LessCSS Maven Plugin
+ * http://lesscss-maven-plugin.projects.gabrys.biz/
+ *
+ * Copyright (c) 2015 Adam Gabryś
+ *
+ * This file is licensed under the BSD 3-Clause (the "License").
+ * You may not use this file except in compliance with the License.
+ * You may obtain:
+ *  - a copy of the License at project page
+ *  - a template of the License at https://opensource.org/licenses/BSD-3-Clause
+ */
+package biz.gabrys.maven.plugins.lesscss;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import biz.gabrys.lesscss.compiler.CompilerOptions;
+import biz.gabrys.lesscss.compiler.CompilerOptionsBuilder;
+import biz.gabrys.lesscss.extended.compiler.CachingCompiledCodeExtendedCompiler;
+import biz.gabrys.lesscss.extended.compiler.CachingSourceCodeExtendedCompilerBuilder;
+import biz.gabrys.lesscss.extended.compiler.ExtendedCompiler;
+import biz.gabrys.lesscss.extended.compiler.NonCachingExtendedCompilerBuilder;
+import biz.gabrys.lesscss.extended.compiler.cache.FullCache;
+import biz.gabrys.lesscss.extended.compiler.cache.FullCacheAdapterBuilder;
+import biz.gabrys.lesscss.extended.compiler.cache.FullCacheBuilder;
+import biz.gabrys.lesscss.extended.compiler.control.expiration.CompiledSourceExpirationChecker;
+import biz.gabrys.lesscss.extended.compiler.control.processor.PostCompilationProcessor;
+import biz.gabrys.lesscss.extended.compiler.source.LocalSource;
+import biz.gabrys.lesscss.extended.compiler.source.SourceFactory;
+import biz.gabrys.lesscss.extended.compiler.source.SourceFactoryBuilder;
+import biz.gabrys.maven.plugin.util.io.DestinationFileCreator;
+import biz.gabrys.maven.plugin.util.io.FileScanner;
+import biz.gabrys.maven.plugin.util.io.ScannerFactory;
+import biz.gabrys.maven.plugin.util.io.ScannerPatternFormat;
+import biz.gabrys.maven.plugin.util.timer.SystemTimer;
+import biz.gabrys.maven.plugin.util.timer.Timer;
+import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompilationDateCache;
+import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiledCodeCache;
+import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiler;
+import biz.gabrys.maven.plugins.lesscss.compiler.PathInCommentPostProcessor;
+import biz.gabrys.maven.plugins.lesscss.compiler.PathInCommentSourceCodeCache;
+import biz.gabrys.maven.plugins.lesscss.compiler.PluginCompiler;
+import biz.gabrys.maven.plugins.lesscss.compiler.PluginSourceExpirationChecker;
+
+/**
+ * Compiles <a href="http://lesscss.org/">Less</a> files to <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets
+ * using <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">extended version</a> of the
+ * <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
+ * @since 1.0
+ */
+@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
+public class CompileMojo extends AbstractMojo {
+
+    /**
+     * Defines whether to skip the plugin execution.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.skip", defaultValue = "false")
+    protected boolean skip;
+
+    /**
+     * Defines whether the plugin runs in verbose mode.<br>
+     * <b>Notice</b>: always true in debug mode.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.verbose", defaultValue = "false")
+    protected boolean verbose;
+
+    /**
+     * Forces the <a href="http://lesscss.org/">Less</a> compiler to always compile the
+     * <a href="http://lesscss.org/">Less</a> sources. By default <a href="http://lesscss.org/">Less</a> sources are
+     * only compiled when modified (including imports) or the <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheet
+     * does not exists.<br>
+     * <b>Notice</b>: always false when <a href="#watch">watch</a> is equal to true.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.force", defaultValue = "false")
+    protected boolean force;
+
+    /**
+     * Defines whether the plugin should always overwrite destination files (also if sources did not changed).<br>
+     * <b>Notice</b>: always true when <a href="#force">force</a> is equal to true.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.alwaysOverwrite", defaultValue = "false")
+    protected boolean alwaysOverwrite;
+
+    /**
+     * The directory which contains the <a href="http://lesscss.org/">Less</a> sources.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.sourceDirectory", defaultValue = "${project.basedir}/src/main/less")
+    protected File sourceDirectory;
+
+    /**
+     * The directory for compiled <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.outputDirectory", defaultValue = "${project.build.directory}")
+    protected File outputDirectory;
+
+    /**
+     * Defines inclusion and exclusion fileset patterns format. Available options:
+     * <ul>
+     * <li><b>ant</b> - <a href="http://ant.apache.org/">Ant</a>
+     * <a href="http://ant.apache.org/manual/dirtasks.html#patterns">patterns</a></li>
+     * <li><b>regex</b> - regular expressions (use '/' as path separator)</li>
+     * </ul>
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.filesetPatternFormat", defaultValue = "ant")
+    protected String filesetPatternFormat;
+
+    /**
+     * List of files to include. Specified as fileset patterns which are relative to the
+     * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
+     * formats</a>.<br>
+     * <b>Default value is</b>: <tt>["&#42;&#42;/&#42;.less"]</tt> for <a href="#filesetPatternFormat">ant</a> or
+     * <tt>["^.+\.less$"]</tt> for <a href="#filesetPatternFormat">regex</a>.
+     * @since 1.0
+     */
+    @Parameter
+    protected String[] includes = new String[0];
+
+    /**
+     * List of files to exclude. Specified as fileset patterns which are relative to the
+     * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
+     * formats</a>.<br>
+     * <b>Default value is</b>: <tt>[]</tt>.
+     * @since 1.0
+     */
+    @Parameter
+    protected String[] excludes = new String[0];
+
+    /**
+     * Defines compiler type used in compilation process. Available options:
+     * <ul>
+     * <li><b>full</b> - designed to compile files placed on a local hard drive and in the network</li>
+     * <li><b>local</b> - designed to compile files placed on a local hard drive</li>
+     * </ul>
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.compilerType", defaultValue = "full")
+    protected String compilerType;
+
+    /**
+     * Defines whether the plugin should add comments with sources paths at the beginning and end of each source.<br>
+     * <b>Notice</b>: always false when <a href="#compilerType">compiler type</a> is equal to <b>local</b> or
+     * <a href="#compress">compress</a> is equal to true.<br>
+     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.addCommentsWithPaths", defaultValue = "false")
+    protected boolean addCommentsWithPaths;
+
+    /**
+     * Restricted class name prefix used to create comments with sources paths.<br>
+     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.addCommentsWithPathsClassPrefix", defaultValue = "gabrys-biz-comment-with-path-marker-class")
+    protected String addCommentsWithPathsClassPrefix;
+
+    /**
+     * Whether the compiler should minify the <a href="http://www.w3.org/Style/CSS/">CSS</a> code.<br>
+     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter
+     * and <a href="#force">force</a> is equal to false.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.compress", defaultValue = "false")
+    protected boolean compress;
+
+    /**
+     * List of options passed to the compiler. See
+     * <a href="http://lesscss.org/usage/index.html#command-line-usage-options">Less options</a><br>
+     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
+     * <br>
+     * <b>Default value is</b>: <tt>[]</tt>.
+     * @since 1.0
+     */
+    @Parameter
+    protected String[] compilerOptions = new String[0];
+
+    /**
+     * Sources encoding.<br>
+     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter
+     * and <a href="#force">force</a> is equal to false.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.encoding", defaultValue = "${project.build.sourceEncoding}")
+    protected String encoding;
+
+    /**
+     * Destination files naming format. {fileName} is equal to source file name without extension.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.outputFileFormat", defaultValue = DestinationFileCreator.FILE_NAME_PARAMETER + ".css")
+    protected String outputFileFormat;
+
+    /**
+     * Defines whether the plugin should watch for changes in source files and compile if it detects any.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.watch", defaultValue = "false")
+    protected boolean watch;
+
+    /**
+     * The interval in seconds between the plugin searching for changes in source files.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.watchInterval", defaultValue = "5")
+    protected int watchInterval;
+
+    /**
+     * The plugin working directory.
+     * @since 1.0
+     */
+    @Parameter(property = "lesscss.workingDirectory", defaultValue = "${project.build.directory}/gabrys-biz-lesscss-maven-plugin")
+    protected File workingDirectory;
+
+    private void logParameters() {
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Job parameters:");
+            getLog().debug("\tskip = " + skip);
+            getLog().debug("\tverbose = " + verbose + " (calculated: true)");
+            getLog().debug("\tforce = " + force + (watch ? " (calculated: false)" : ""));
+            getLog().debug("\talwaysOverwrite = " + alwaysOverwrite + (force ? " (calculated: true)" : ""));
+            getLog().debug("\tsourceDirectory = " + sourceDirectory);
+            getLog().debug("\toutputDirectory = " + outputDirectory);
+            getLog().debug("\tfilesetPatternFormat = " + filesetPatternFormat);
+            final String calculatedIncludes = includes.length == 0 ? " (calculated: " + Arrays.toString(getDefaultIncludes()) + ')' : "";
+            getLog().debug("\tincludes = " + Arrays.toString(includes) + calculatedIncludes);
+            getLog().debug("\texcludes = " + Arrays.toString(excludes));
+            getLog().debug("\tcompilerType = " + compilerType);
+            getLog().debug("\taddCommentsWithPaths = " + addCommentsWithPaths + (compress ? " (calculated: false}" : ""));
+            getLog().debug("\taddCommentsWithPathsClassPrefix = " + addCommentsWithPathsClassPrefix);
+            getLog().debug("\tcompress = " + compress);
+            getLog().debug("\tcompilerOptions = " + Arrays.toString(compilerOptions));
+            getLog().debug("\tencoding = " + encoding);
+            getLog().debug("\toutputFileFormat = " + outputFileFormat);
+            getLog().debug("\twatch = " + watch);
+            getLog().debug("\twatchInterval = " + watchInterval + " seconds");
+            getLog().debug("\tworkingDirectory = " + workingDirectory);
+            getLog().debug("");
+        }
+    }
+
+    private String[] getDefaultIncludes() {
+        if (ScannerPatternFormat.ANT.name().equalsIgnoreCase(filesetPatternFormat)) {
+            return new String[] { "**/*.less" };
+        } else {
+            return new String[] { "^.+\\.less$" };
+        }
+    }
+
+    private void calculateParameters() {
+        if (getLog().isDebugEnabled()) {
+            verbose = true;
+        }
+        if (watch) {
+            force = false;
+        }
+        if (force) {
+            alwaysOverwrite = true;
+        }
+        if (compress) {
+            addCommentsWithPaths = false;
+        }
+        if (includes.length == 0) {
+            includes = getDefaultIncludes();
+        }
+    }
+
+    public void execute() throws MojoFailureException {
+        logParameters();
+        if (skip) {
+            getLog().info("Skips job execution");
+            return;
+        }
+        calculateParameters();
+
+        if (watch) {
+            runWatchMode();
+        } else {
+            runCompilation();
+        }
+    }
+
+    private void runWatchMode() throws MojoFailureException {
+        getLog().info("Starts watch mode on the " + sourceDirectory);
+        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        final long interval = watchInterval * 1000L;
+        while (true) {
+            runCompilation();
+            try {
+                Thread.sleep(interval);
+            } catch (final InterruptedException e) {
+                if (Thread.currentThread().isInterrupted()) {
+                    return;
+                }
+            }
+        }
+    }
+
+    private void runCompilation() throws MojoFailureException {
+        if (!sourceDirectory.exists()) {
+            getLog().warn("Source directory does not exist: " + sourceDirectory.getAbsolutePath());
+            return;
+        }
+        final Collection<File> files = getFiles();
+        if (files.isEmpty()) {
+            getLog().warn("No sources to compile");
+            return;
+        }
+
+        if (force) {
+            deleteWorkingDirectory();
+        }
+        compileFiles(files);
+    }
+
+    private Collection<File> getFiles() {
+        final ScannerPatternFormat patternFormat = ScannerPatternFormat.toPattern(filesetPatternFormat);
+        final FileScanner scanner = new ScannerFactory().create(patternFormat, getLog());
+        if (verbose) {
+            getLog().info("Scanning directory for sources...");
+        }
+        return scanner.getFiles(sourceDirectory, includes, excludes);
+    }
+
+    private void deleteWorkingDirectory() throws MojoFailureException {
+        if (!workingDirectory.exists()) {
+            return;
+        }
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Deleting working directory: " + workingDirectory.getAbsolutePath());
+        }
+        try {
+            FileUtils.deleteDirectory(workingDirectory);
+        } catch (final IOException e) {
+            throw new MojoFailureException("Cannot delete working directory: " + workingDirectory.getAbsolutePath(), e);
+        }
+    }
+
+    private void compileFiles(final Collection<File> files) throws MojoFailureException {
+        final PluginCompiler compiler = createCompiler();
+        final CompilerOptions options = createOptions();
+        final String sourceFilesText = "source file" + (files.size() != 1 ? "s" : "");
+        getLog().info(String.format("Compiling %s %s to %s", +files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
+        final Timer timer = SystemTimer.getStartedTimer();
+        for (final File file : files) {
+            compileFile(compiler, options, file);
+        }
+        getLog().info(String.format("Finished %s compilation in %s", sourceFilesText, timer.stop()));
+    }
+
+    private PluginCompiler createCompiler() {
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Creating compiler...");
+        }
+        FullCache cache = null;
+        ExtendedCompiler compiler;
+        SourceFactory sourceFactory;
+        if ("full".equalsIgnoreCase(compilerType)) {
+            cache = new FullCacheBuilder().withDirectory(workingDirectory).create();
+            sourceFactory = new SourceFactoryBuilder().withStandard().create();
+            PostCompilationProcessor postProcessor = null;
+            if (addCommentsWithPaths) {
+                cache = new FullCacheAdapterBuilder(cache)
+                        .withSourceCodeCache(new PathInCommentSourceCodeCache(cache, addCommentsWithPathsClassPrefix)).create();
+                postProcessor = new PathInCommentPostProcessor(addCommentsWithPathsClassPrefix);
+            }
+            compiler = new CachingSourceCodeExtendedCompilerBuilder(cache).withSourceFactory(sourceFactory).withPostProcessor(postProcessor)
+                    .create();
+        } else if ("local".equalsIgnoreCase(compilerType)) {
+            sourceFactory = force ? null : new SourceFactoryBuilder().withLocal().create();
+            compiler = new NonCachingExtendedCompilerBuilder().create();
+        } else {
+            throw new IllegalArgumentException(String.format("Cannot find compiler for type \"%s\"", compilerType));
+        }
+        if (verbose) {
+            compiler = new LoggingCompiler(compiler, getLog());
+        }
+        if (!force) {
+            cache = cache != null ? cache : new FullCacheBuilder().withDirectory(workingDirectory).create();
+            if (verbose) {
+                FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache)
+                        .withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
+                if (getLog().isDebugEnabled()) {
+                    builder = builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
+                }
+                cache = builder.create();
+            }
+            final CompiledSourceExpirationChecker expirationChecker = new PluginSourceExpirationChecker(cache, sourceFactory, getLog());
+            compiler = new CachingCompiledCodeExtendedCompiler(compiler, expirationChecker, cache, cache);
+        }
+        return new PluginCompiler(compiler, cache);
+    }
+
+    private CompilerOptions createOptions() {
+        final CompilerOptionsBuilder builder = new CompilerOptionsBuilder();
+        builder.setMinified(compress);
+        final CompilerOptions options = builder.create();
+        final List<Object> arguments = new ArrayList<Object>();
+        arguments.addAll(options.getArguments());
+        arguments.addAll(Arrays.asList(compilerOptions));
+        return new CompilerOptions(arguments);
+    }
+
+    private void compileFile(final PluginCompiler compiler, final CompilerOptions options, final File source) throws MojoFailureException {
+        Timer timer = null;
+        if (verbose) {
+            getLog().info("Processing Less source: " + source.getAbsolutePath());
+            timer = SystemTimer.getStartedTimer();
+        }
+        final String compiled = compiler.compile(new LocalSource(source, encoding), options);
+        saveCompiledCode(source, compiled, compiler.getCompilationDate());
+        if (verbose) {
+            getLog().info("Finished in " + timer.stop());
+        }
+    }
+
+    private void saveCompiledCode(final File source, final String compiled, final Date compilationDate) throws MojoFailureException {
+        final File destination = new DestinationFileCreator(sourceDirectory, outputDirectory, outputFileFormat).create(source);
+
+        final boolean skipsFileSaving = !force && !alwaysOverwrite && destination.exists()
+                && compilationDate.before(new Date(destination.lastModified()));
+        if (skipsFileSaving) {
+            if (verbose) {
+                getLog().info("Skips saving CSS compiled code to file, because cached version is older than destination file: "
+                        + destination.getAbsolutePath());
+            }
+            return;
+        }
+
+        if (verbose) {
+            getLog().info("Saving CSS code to " + destination.getAbsolutePath());
+        }
+        try {
+            FileUtils.write(destination, compiled, encoding);
+        } catch (final IOException e) {
+            throw new MojoFailureException("Cannot save CSS compiled code to file: " + destination.getAbsolutePath(), e);
+        }
+    }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Migration</title>
+    </properties>
+
+    <body>
+        <section name="How to switch">
+            <p>
+                This page describes how to switch from the
+                <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">org.lesscss:lesscss-maven-plugin</a>
+                (by <a href="https://github.com/marceloverdijk">Marcel Overdijk</a>) to this plugin.
+                To minimize the number of steps while switching, the plugin is designed to use parameters with the same
+                names with concrete default values. Steps:
+            </p>
+            <ol>
+                <li>change <code>groupId</code> to the <code>${project.groupId}</code></li>
+                <li>change <code>version</code> to the <code>${project.version}</code></li>
+                <li>remove <code>lessJs</code> parameter (does not exist)</li>
+                <li>
+                    correct <a href="compile-mojo.html#watchInterval">watchInterval</a> parameter value
+                    (now contains seconds and default value is <code>5</code> instead of the <code>1</code>)
+                </li>
+            </ol>
+        </section>
+        <section name="Main difference">
+            <p>
+                The main difference between <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">org.lesscss:lesscss-maven-plugin</a>
+                and <code>${project.groupId}:${project.artifactId}</code> is that this plugin uses
+                <a href="compile-mojo.html#workingDirectory">working directory</a> which store internal data.
+                This causes, that the plugin requires more space on disk, but it fully supports
+                <a href="https://github.com/less/less.js/releases/tag/v1.7.5">Less 1.7.5</a>.
+            </p>
+        </section>
+    </body>
+</document>

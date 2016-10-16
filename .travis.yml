@@ -1,0 +1,7 @@
+language: java
+script: mvn -e clean install site
+jdk:
+  - oraclejdk8
+  - oraclejdk7
+  - openjdk7
+  - openjdk6

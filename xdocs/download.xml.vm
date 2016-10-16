@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Download</title>
+    </properties>
+
+    <body>
+        #set($snapshot = $project.version.contains("SNAPSHOT"))
+        <section name="Download">
+            <table>
+                <tr>
+                    <th>File</th>
+                    <th>Download</th>
+                </tr>
+                <tr>
+                    <td
+                        #if (!$snapshot)
+                            style="vertical-align: middle;"
+                        #end
+                    >lesscss-maven-plugin-${project.version}.jar</td>
+                    <td>
+                        <a href="files/lesscss-maven-plugin-${project.version}.jar">gabrys.biz</a>
+                        #if (!$snapshot)
+                            <br /><a href="https://repo.maven.apache.org/maven2/biz/gabrys/maven/plugins/lesscss-maven-plugin/${project.version}/lesscss-maven-plugin-${project.version}.jar">repo.maven.apache.org</a>
+                        #end
+                    </td>
+                </tr>
+                <tr>
+                    <td
+                        #if (!$snapshot)
+                            style="vertical-align: middle;"
+                        #end
+                    >lesscss-maven-plugin-${project.version}-sources.jar</td>
+                    <td>
+                        <a href="files/lesscss-maven-plugin-${project.version}-sources.jar">gabrys.biz</a>
+                        #if (!$snapshot)
+                            <br /><a href="https://repo.maven.apache.org/maven2/biz/gabrys/maven/plugins/lesscss-maven-plugin/${project.version}/lesscss-maven-plugin-${project.version}-sources.jar">repo.maven.apache.org</a>
+                        #end
+                    </td>
+                </tr>
+                #if (!$snapshot)
+                    <tr>
+                        <td>Source code (zip)</td>
+                        <td>
+                            <a href="https://github.com/gabrysbiz/lesscss-maven-plugin/archive/v${project.version}.zip">github.com</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Source code (tar.gz)</td>
+                        <td>
+                            <a href="https://github.com/gabrysbiz/lesscss-maven-plugin/archive/v${project.version}.tar.gz">github.com</a>
+                        </td>
+                    </tr>
+                #end
+            </table>
+        </section>
+        <section name="Dependency management tools">
+            <p>
+                <a href="dependency-info.html">Dependency information</a> page describes how to include the library using various dependency management tools.
+                If you want to use snapshot, then you need to add the <a href="https://oss.sonatype.org/content/repositories/snapshots/">oss.sonatype.org</a>
+                repository, e.g. for <a href="http://maven.apache.org/">Maven</a>:
+            </p>
+            <pre>&lt;repositories&gt;
+    &lt;repository&gt;
+        &lt;id&gt;sonatype-nexus-snapshots&lt;/id&gt;
+        &lt;name&gt;Sonatype's SNAPSHOT repository&lt;/name&gt;
+        &lt;url&gt;https://oss.sonatype.org/content/repositories/snapshots&lt;/url&gt;
+        &lt;releases&gt;
+            &lt;enabled&gt;false&lt;/enabled&gt;
+        &lt;/releases&gt;
+        &lt;snapshots&gt;
+            &lt;enabled&gt;true&lt;/enabled&gt;
+        &lt;/snapshots&gt;
+    &lt;/repository&gt;
+&lt;/repositories&gt;</pre>
+        </section>
+    </body>
+</document>

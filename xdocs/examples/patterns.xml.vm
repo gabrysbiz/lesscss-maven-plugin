@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Using include/exclude patterns</title>
+    </properties>
+
+    <body>
+        <section name="Using include/exclude patterns">
+            <p>
+                You can decide which files from the <a href="../compile-mojo.html#sourceDirectory">source directory</a>
+                will be compiled. Include and exclude patterns can be defined in two formats: <a href="#ant">Ant</a>
+                and <a href="#regex">regular expressions</a>.
+            </p>
+        </section>
+        <section id="ant" name="Ant patterns">
+            <p>
+                <a href="http://ant.apache.org/">Ant</a> <a href="http://ant.apache.org/manual/dirtasks.html#patterns">patterns</a>
+                is a default format. The following example includes files with <code>less</code> extension, but which are not located
+                in <code>vendors</code> directory.
+            </p>
+            <pre>&lt;project&gt;
+   ...
+   &lt;build&gt;
+      &lt;plugins&gt;
+         ...
+         &lt;plugin&gt;
+            &lt;groupId&gt;${project.groupId}&lt;/groupId&gt;
+            &lt;artifactId&gt;${project.artifactId}&lt;/artifactId&gt;
+            &lt;version&gt;${project.version}&lt;/version&gt;
+            &lt;executions&gt;
+               &lt;execution&gt;
+                  &lt;goals&gt;
+                     &lt;goal&gt;compile&lt;/goal&gt;
+                  &lt;/goals&gt;
+                  &lt;configuration&gt;
+                     &lt;includes&gt;
+                        &lt;include&gt;**/*.less&lt;/include&gt; &lt;!-- this is a default value --&gt;
+                     &lt;/includes&gt;
+                     &lt;excludes&gt;
+                        &lt;exclude&gt;vendors/**/*.*&lt;/exclude&gt;
+                     &lt;/excludes&gt;
+                  &lt;/configuration&gt;
+               &lt;/execution&gt;
+            &lt;/executions&gt;
+         &lt;/plugin&gt;
+      &lt;/plugins&gt;
+   &lt;/build&gt;
+&lt;project&gt;</pre>
+        </section>
+        <section id="regex" name="Regular expressions patterns">
+            <p>
+                You can use regular expressions to define include and exclude patterns. File path separator is always equal to
+                <code>/</code>. The following example includes files with <code>less</code> extension, but which are not located
+                in <code>vendors</code> directory.
+            </p>
+            <pre>&lt;project&gt;
+   ...
+   &lt;build&gt;
+      &lt;plugins&gt;
+         ...
+         &lt;plugin&gt;
+            &lt;groupId&gt;${project.groupId}&lt;/groupId&gt;
+            &lt;artifactId&gt;${project.artifactId}&lt;/artifactId&gt;
+            &lt;version&gt;${project.version}&lt;/version&gt;
+            &lt;executions&gt;
+               &lt;execution&gt;
+                  &lt;goals&gt;
+                     &lt;goal&gt;compile&lt;/goal&gt;
+                  &lt;/goals&gt;
+                  &lt;configuration&gt;
+                     &lt;filesetPatternFormat&gt;regex&lt;/filesetPatternFormat&gt;
+                     &lt;includes&gt;
+                         &lt;include&gt;^.+\.less$&lt;/include&gt; &lt;!-- this is a default value --&gt;
+                     &lt;/includes&gt;
+                     &lt;excludes&gt;
+                         &lt;exclude&gt;^vendors/.+$&lt;/exclude&gt;
+                     &lt;/excludes&gt;
+                  &lt;/configuration&gt;
+               &lt;/execution&gt;
+            &lt;/executions&gt;
+         &lt;/plugin&gt;
+      &lt;/plugins&gt;
+   &lt;/build&gt;
+&lt;project&gt;</pre>
+        </section>
+    </body>
+</document>

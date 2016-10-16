@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Compilers comparison</title>
+    </properties>
+
+    <body>
+        <section name="Compilers comparison">
+            <p>
+                The following tables show the differences between this and <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">LessCSS Maven Plugin</a>
+                (by <a href="https://github.com/marceloverdijk">Marcel Overdijk</a>) compilers.
+            </p>
+            <table>
+                <caption>Features</caption>
+                <tr>
+                    <th>Feature</th>
+                    <th><a href="https://github.com/marceloverdijk/lesscss-maven-plugin">Marcel Overdijk Plugin</a></th>
+                    <th>Full</th>
+                    <th>Local</th>
+                </tr>
+                <tr>
+                    <td>Compiles files located at local drive</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                </tr>
+                <tr>
+                    <td>Compiles files located at network</td>
+                    <td>yes</td>
+                    <td>yes</td>
+                    <td>no</td>
+                </tr>
+                <tr>
+                    <td>Supports <a href="http://lesscss.org/features/#import-options">import options</a></td>
+                    <td>css &amp; less</td>
+                    <td>css, inline, less, multiple, once &amp; reference</td>
+                    <td>css, inline, less, multiple, once &amp; reference</td>
+                </tr>
+            </table>
+            <p>
+                Examples:
+            </p>
+            <ol>
+                <li><a href="https://github.com/gabrysbiz/lesscss-maven-plugin-examples/tree/master/features">language features support</a></li>
+                <li><a href="https://github.com/gabrysbiz/lesscss-maven-plugin-examples/tree/master/imports">import options support</a></li>
+            </ol>
+            <table>
+                <caption>Cache usage disk space</caption>
+                <tr>
+                    <th><a href="compile-mojo.html#force">Force</a> mode</th>
+                    <th><a href="https://github.com/marceloverdijk/lesscss-maven-plugin">Marcel Overdijk Plugin</a></th>
+                    <th>Full</th>
+                    <th>Local</th>
+                </tr>
+                <tr>
+                    <td>Enabled</td>
+                    <td>Sources size with duplications* (create temp file with all sources)</td>
+                    <td>Sources size + (number of sources * few KB)</td>
+                    <td>Number of sources * few KB</td>
+                </tr>
+                <tr>
+                    <td>Disabled</td>
+                    <td>Sources size with duplications* (create temp file with all sources)</td>
+                    <td>Sources size + generated CSS code size + (number of sources * few KB)</td>
+                    <td>Generated CSS code size + (number of sources * few KB)</td>
+                </tr>
+            </table>
+            <p>* if your file imports style.less two times, then it will be put two times to temp file</p>
+            <table>
+                <caption>Performance</caption>
+                <tr>
+                    <th>Example</th>
+                    <th><a href="https://github.com/marceloverdijk/lesscss-maven-plugin">Marcel Overdijk Plugin</a></th>
+                    <th>Full</th>
+                    <th>Local</th>
+                </tr>
+                <tr>
+                    <td>imports-test.less</td>
+                    <td>compilation error</td>
+                    <td>
+                        min: 25.050,
+                        average: 26.2423,
+                        max: 27.456
+                    </td>
+                    <td>
+                        min: 24.612,
+                        average: 26.0842,
+                        max: 27.080
+                    </td>
+                </tr>
+                <tr>
+                    <td>speed-test.less</td>
+                    <td>
+                        min: 37,600,
+                        average: 40,1548,
+                        max: 42,346
+                    </td>
+                    <td>
+                        min: 38.926,
+                        average: 40.8754,
+                        max: 43.676
+                    </td>
+                    <td>
+                        min: 37.394,
+                        average: 41.6255,
+                        max: 43.692
+                    </td>
+                </tr>
+            </table>
+            <p>
+                Example: <a href="https://github.com/gabrysbiz/lesscss-maven-plugin-examples/tree/master/performance">stress tests for compilers</a>
+            </p>
+            <p>
+                Execution times are given in seconds and every example has been compiled 20 times (<a href="compile-mojo.html#force">force</a> mode).
+            </p>
+            <p>
+                Test environment:
+            </p>
+            <ul>
+                <li>Windows 8.1</li>
+                <li><a href="http://ark.intel.com/products/65702/Intel-Core-i5-3570-Processor-6M-Cache-up-to-3_80-GHz">Intel&#174; Core&#8482; i5-3570</a></li>
+                <li>32GB RAM 1600Mhz CL10 (4 * Kingston KHX1600C10D3/8GX)</li>
+                <li>OCZ Vertex3 (up to 550 MB/s sequential read &amp; 520 MB/s sequential write)</li>
+            </ul>
+        </section>
+    </body>
+</document>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
+
+    <bannerLeft>
+        <name>${projectName}</name>
+        <href>../</href>
+    </bannerLeft>
+
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>1.5</version>
+    </skin>
+    <custom>
+        <fluidoSkin>
+            <gitHub>
+                <projectId>gabrysbiz/lesscss-maven-plugin</projectId>
+                <ribbonColor>gray</ribbonColor>
+                <ribbonOrientation>right</ribbonOrientation>
+            </gitHub>
+            <googleSearch />
+        </fluidoSkin>
+    </custom>
+
+    <poweredBy>
+        <logo name="Less" href="http://lesscss.org" img="images/logos/less.png" />
+        <logo name="gabrys.biz on GitHub" href="https://github.com/gabrysbiz" img="images/logos/github.png" />
+        <logo name="Built by Maven" img="images/logos/maven-feather.png" />
+    </poweredBy>
+
+    <body>
+        <menu name="Overview">
+            <item name="Introduction" href="index.html" />
+            <item name="Goals" href="plugin-info.html" />
+            <item name="Migration" href="migration.html" />
+            <item name="Usage" href="usage.html" />
+            <item name="Download" href="download.html" />
+            <item name="Compilers comparison" href="compilers-comparison.html" />
+            <item name="FAQ" href="faq.html" />
+        </menu>
+
+        <menu name="Examples">
+            <item name="Using include/exclude patterns" href="examples/patterns.html" />
+            <item name="Multiple source/output directories" href="examples/multiple-directories.html" />
+            <item name="Sources located only on local hard drive" href="examples/local-sources.html" />
+        </menu>
+
+        <menu ref="reports" />
+    </body>
+</project>

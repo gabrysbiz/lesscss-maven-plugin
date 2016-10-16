@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Introduction</title>
+    </properties>
+
+    <body>
+        <section name="About">
+            <p>
+                This plugin compiles <a href="http://lesscss.org/">Less</a> files to <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets using
+                <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">extended version</a> of the
+                <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
+            </p>
+            <p>
+                The plugin was developed as an alternative version of the <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">org.lesscss:lesscss-maven-plugin</a>
+                (by <a href="https://github.com/marceloverdijk">Marcel Overdijk</a>) which is compatible with
+                <a href="https://github.com/less/less.js/releases/tag/v1.7.5">Less 1.7.5</a>. It resolves all problems with
+                <a href="http://lesscss.org/features/#import-options">imports options</a> and adds extra features:
+            </p>
+            <ul>
+                <li>two <a href="compilers-comparison.html">compiler types</a> for lower disk usage</li>
+                <li>
+                    <a href="compile-mojo.html#addCommentsWithPaths">inserts sources paths</a> to
+                    <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets (assists work on large files)
+                </li>
+            </ul>
+            <p>
+                Read a <a href="migration.html">migration</a> page for information how to switch from the
+                <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">org.lesscss:lesscss-maven-plugin</a> to this plugin.
+            </p>
+        </section>
+        <section name="Goals Overview">
+            <ul>
+                <li>
+                    <a href="compile-mojo.html">lesscss:compile</a> - compiles <a href="http://lesscss.org/">Less</a> files to
+                    <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets
+                </li>
+            </ul>
+        </section>
+        <section name="Requirements">
+            <p>
+                The plugin to run requires:
+            </p>
+            <ul>
+                <li>Java 5.0 or higher</li>
+                <li>Maven 2.0.11 or higher</li>
+            </ul>
+        </section>
+        <section name="Usage">
+            <p>
+                General instructions on how to use the ${project.name} can be found on the <a href="usage.html">usage</a> page. Some more specific
+                use cases are described in the examples given below. Last but not least, users occasionally contribute additional examples, tips
+                or errata to the plugin's <a href="https://github.com/gabrysbiz/lesscss-maven-plugin/wiki">wiki</a> page.
+            </p>
+            <p>
+                In case you still have questions regarding the plugin's usage, please have a look at the <a href="faq.html">FAQ</a>.
+            </p>
+            <p>
+                If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in the
+                <a href="issue-tracking.html">issue tracker</a>. When creating a new issue, please provide a comprehensive description of your concern.
+                Especially for fixing bugs it is crucial that the developers can reproduce your problem. For this reason, entire debug logs,
+                POMs or most preferably little demo projects attached to the issue are very much appreciated. Of course, patches are also welcome.
+                Contributors can check out the project from the <a href="source-repository.html">source repository</a> and will find supplementary information
+                in the <a href="http://maven.apache.org/guides/development/guide-helping.html">guide to helping with Maven</a>.
+            </p>
+        </section>
+        <section name="Examples">
+            <p>
+                To provide you with better understanding of some usages of the ${project.name}, you can take a look into the following examples:
+            </p>
+            <ul>
+                <li><a href="examples/patterns.html">Using include/exclude patterns</a></li>
+                <li><a href="examples/multiple-directories.html">Multiple source/output directories</a></li>
+                <li><a href="examples/local-sources.html">Sources located only on local hard drive</a></li>
+            </ul>
+            <p>
+                You can also fetch example projects from <a href="https://github.com/gabrysbiz/lesscss-maven-plugin-examples">GitHub</a>.
+            </p>
+        </section>
+    </body>
+</document>
