@@ -6,4 +6,9 @@
         <lastmod>2016-10-16</lastmod>
         <priority>1.0</priority>
     </url>
+    <url>
+        <loc>http://lesscss-maven-plugin.projects.gabrys.biz/1.0/</loc>
+        <lastmod>2016-10-16</lastmod>
+        <priority>0.8</priority>
+    </url>
 </urlset>
