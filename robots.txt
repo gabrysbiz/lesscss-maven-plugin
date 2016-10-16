@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /LATEST/
+Sitemap: http://lesscss-maven-plugin.projects.gabrys.biz/sitemap.xml

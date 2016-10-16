@@ -1,0 +1,6 @@
+{
+  "name": "CSS Splitter Maven Plugin",
+  "tagline": "Splits CSS stylesheets to smaller files",
+  "body": "# About\r\nThe CSS Splitter Maven Plugin is used to split the [CSS](http://www.w3.org/Style/CSS/) stylesheets to smaller files (parts) which contains maximum X rules.\r\n\r\n# Versions\r\n* [LATEST](/latest) - the latest version under development",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
