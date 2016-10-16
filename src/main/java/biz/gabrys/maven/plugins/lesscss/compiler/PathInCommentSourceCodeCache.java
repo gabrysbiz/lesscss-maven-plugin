@@ -39,7 +39,7 @@ public class PathInCommentSourceCodeCache implements SourceCodeCache {
     }
 
     private CharSequence createClass(final LessSource source, final boolean start) {
-        final StringBuilder css = new StringBuilder();
+        final StringBuilder css = new StringBuilder(100);
         if (!start) {
             css.append('\n');
         }

@@ -38,6 +38,7 @@
             <item name="Download" href="download.html" />
             <item name="Compilers comparison" href="compilers-comparison.html" />
             <item name="FAQ" href="faq.html" />
+            <item name="Changelog" href="changelog.html" />
         </menu>
 
         <menu name="Examples">

@@ -351,7 +351,7 @@ public class CompileMojo extends AbstractMojo {
         try {
             FileUtils.deleteDirectory(workingDirectory);
         } catch (final IOException e) {
-            throw new MojoFailureException("Cannot delete working directory: " + workingDirectory.getAbsolutePath(), e);
+            throw new MojoFailureException(String.format("Cannot delete working directory: %s", workingDirectory.getAbsolutePath()), e);
         }
     }
 
@@ -452,7 +452,7 @@ public class CompileMojo extends AbstractMojo {
         try {
             FileUtils.write(destination, compiled, encoding);
         } catch (final IOException e) {
-            throw new MojoFailureException("Cannot save CSS compiled code to file: " + destination.getAbsolutePath(), e);
+            throw new MojoFailureException(String.format("Cannot save CSS compiled code to file: %s", destination.getAbsolutePath()), e);
         }
     }
 }
