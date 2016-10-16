@@ -83,7 +83,7 @@ public class CompileMojo extends AbstractMojo {
      * Forces the <a href="http://lesscss.org/">Less</a> compiler to always compile the
      * <a href="http://lesscss.org/">Less</a> sources. By default <a href="http://lesscss.org/">Less</a> sources are
      * only compiled when modified (including imports) or the <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheet
-     * does not exists.<br>
+     * does not exist.<br>
      * <b>Notice</b>: always false when <a href="#watch">watch</a> is equal to true.
      * @since 1.0
      */
@@ -358,8 +358,8 @@ public class CompileMojo extends AbstractMojo {
     private void compileFiles(final Collection<File> files) throws MojoFailureException {
         final PluginCompiler compiler = createCompiler();
         final CompilerOptions options = createOptions();
-        final String sourceFilesText = "source file" + (files.size() != 1 ? "s" : "");
-        getLog().info(String.format("Compiling %s %s to %s", +files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
+        final String sourceFilesText = "source" + (files.size() != 1 ? "s" : "");
+        getLog().info(String.format("Compiling %s %s to %s", files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
         final Timer timer = SystemTimer.getStartedTimer();
         for (final File file : files) {
             compileFile(compiler, options, file);
@@ -428,7 +428,7 @@ public class CompileMojo extends AbstractMojo {
         }
         final String compiled = compiler.compile(new LocalSource(source, encoding), options);
         saveCompiledCode(source, compiled, compiler.getCompilationDate());
-        if (verbose) {
+        if (timer != null) {
             getLog().info("Finished in " + timer.stop());
         }
     }

@@ -29,8 +29,8 @@
                 To bind the <a href="compile-mojo.html">compile</a> goal of the ${project.name} to a phase in the build cycle,
                 you will need to add the <code>execution</code> tag with the <code>goal</code> set to <code>compile</code>.
                 Optionally, you can bind the plugin to a different build phase by using the <code>phase</code> option.
-                For instance, using <code>process-sources</code> in the <code>phase</code> option will force the compile goal
-                to run each time this phase of the build cycle occurs.
+                For instance, using <code>process-sources</code> in the <code>phase</code> option will force the
+                <code>compile</code> goal to run each time this phase of the build cycle occurs.
             </p>
             <p>
                 For a complete list of the available configuration options see <a href="compile-mojo.html">lesscss:compile</a>
@@ -94,7 +94,7 @@
                 This plugin supports watch mode, which blocks thread and runs <a href="compile-mojo.html">compile</a>
                 goal every X seconds (see <a href="compile-mojo.html">configuration options</a>).
             </p>
-            <pre>mvn ${project.groupId}:${project.artifactId}:compile -Dwatch=true</pre>
+            <pre>mvn ${project.groupId}:${project.artifactId}:compile -Dlesscss.watch=true</pre>
         </section>
     </body>
 </document>
