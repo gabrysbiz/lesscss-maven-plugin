@@ -359,7 +359,7 @@
 <a class="jxr_linenumber" name="L351" href="#L351">351</a>         <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L352" href="#L352">352</a>             FileUtils.deleteDirectory(workingDirectory);
 <a class="jxr_linenumber" name="L353" href="#L353">353</a>         } <strong class="jxr_keyword">catch</strong> (<strong class="jxr_keyword">final</strong> IOException e) {
-<a class="jxr_linenumber" name="L354" href="#L354">354</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoFailureException(<span class="jxr_string">"Cannot delete working directory: "</span> + workingDirectory.getAbsolutePath(), e);
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoFailureException(String.format(<span class="jxr_string">"Cannot delete working directory: %s"</span>, workingDirectory.getAbsolutePath()), e);
 <a class="jxr_linenumber" name="L355" href="#L355">355</a>         }
 <a class="jxr_linenumber" name="L356" href="#L356">356</a>     }
 <a class="jxr_linenumber" name="L357" href="#L357">357</a> 
@@ -460,7 +460,7 @@
 <a class="jxr_linenumber" name="L452" href="#L452">452</a>         <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L453" href="#L453">453</a>             FileUtils.write(destination, compiled, encoding);
 <a class="jxr_linenumber" name="L454" href="#L454">454</a>         } <strong class="jxr_keyword">catch</strong> (<strong class="jxr_keyword">final</strong> IOException e) {
-<a class="jxr_linenumber" name="L455" href="#L455">455</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoFailureException(<span class="jxr_string">"Cannot save CSS compiled code to file: "</span> + destination.getAbsolutePath(), e);
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> MojoFailureException(String.format(<span class="jxr_string">"Cannot save CSS compiled code to file: %s"</span>, destination.getAbsolutePath()), e);
 <a class="jxr_linenumber" name="L456" href="#L456">456</a>         }
 <a class="jxr_linenumber" name="L457" href="#L457">457</a>     }
 <a class="jxr_linenumber" name="L458" href="#L458">458</a> }

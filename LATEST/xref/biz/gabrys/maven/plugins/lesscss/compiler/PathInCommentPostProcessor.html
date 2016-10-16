@@ -30,7 +30,7 @@
 <a class="jxr_linenumber" name="L22" href="#L22">22</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> String classPattern;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  
 <a class="jxr_linenumber" name="L24" href="#L24">24</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../../../biz/gabrys/maven/plugins/lesscss/compiler/PathInCommentPostProcessor.html">PathInCommentPostProcessor</a>(<strong class="jxr_keyword">final</strong> String className) {
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>          <strong class="jxr_keyword">final</strong> StringBuilder pattern = <strong class="jxr_keyword">new</strong> StringBuilder();
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>          <strong class="jxr_keyword">final</strong> StringBuilder pattern = <strong class="jxr_keyword">new</strong> StringBuilder(100);
 <a class="jxr_linenumber" name="L26" href="#L26">26</a>          pattern.append(<span class="jxr_string">"&#92;&#92;."</span>);
 <a class="jxr_linenumber" name="L27" href="#L27">27</a>          pattern.append(Pattern.quote(className));
 <a class="jxr_linenumber" name="L28" href="#L28">28</a>          pattern.append(<span class="jxr_string">"-(&#92;&#92;d)+(&#92;&#92;s)*&#92;&#92;{(&#92;&#92;s)*name:(&#92;&#92;s)*\&quot;"</span>);
