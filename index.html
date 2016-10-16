@@ -16,7 +16,7 @@
             <h1 class="project-name">LessCSS Maven Plugin</h1>
             <h2 class="project-tagline">Compiles Less sources to CSS files using extended version of the LessCSS Compiler</h2>
             <a href="https://github.com/gabrysbiz/lesscss-maven-plugin" class="btn">View on GitHub</a>
-            <a href="1.0/" class="btn">Release 1.0 docs</a>
+            <a href="1.1/" class="btn">Release 1.1 docs</a>
             <a href="LATEST/" class="btn" rel="nofollow">LATEST (version under development) docs</a>
         </section>
         <section class="main-content">
@@ -38,14 +38,14 @@
                 <a href="http://lesscss.org/features/#import-options">imports options</a> and adds extra features:
             </p>
             <ul>
-                <li>two <a href="1.0/compilers-comparison.html">compiler types</a> for lower disk usage</li>
+                <li>two <a href="1.1/compilers-comparison.html">compiler types</a> for lower disk usage</li>
                 <li>
-                    <a href="1.0/compile-mojo.html#addCommentsWithPaths">inserts sources paths</a> to
+                    <a href="1.1/compile-mojo.html#addCommentsWithPaths">inserts sources paths</a> to
                     <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets (assists work on large files)
                 </li>
             </ul>
             <p>
-                Read a <a href="1.0/migration.html">migration</a> page for information how to switch from the
+                Read a <a href="1.1/migration.html">migration</a> page for information how to switch from the
                 <a href="https://github.com/marceloverdijk/lesscss-maven-plugin">org.lesscss:lesscss-maven-plugin</a> to this plugin.
             </p>
             <h1>
@@ -56,7 +56,7 @@
             </h1>
             <ul>
                 <li>
-                    <a href="1.0/compile-mojo.html">lesscss:compile</a> - compiles <a href="http://lesscss.org/">Less</a> files to
+                    <a href="1.1/compile-mojo.html">lesscss:compile</a> - compiles <a href="http://lesscss.org/">Less</a> files to
                     <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets
                 </li>
             </ul>
@@ -80,19 +80,19 @@
                 Usage
             </h1>
             <p>
-                General instructions on how to use the LessCSS Maven Plugin can be found on the <a href="1.0/usage.html">usage</a> page. Some more specific
+                General instructions on how to use the LessCSS Maven Plugin can be found on the <a href="1.1/usage.html">usage</a> page. Some more specific
                 use cases are described in the examples given below. Last but not least, users occasionally contribute additional examples, tips
                 or errata to the plugin's <a href="https://github.com/gabrysbiz/lesscss-maven-plugin/wiki">wiki</a> page.
             </p>
             <p>
-                In case you still have questions regarding the plugin's usage, please have a look at the <a href="1.0/faq.html">FAQ</a>.
+                In case you still have questions regarding the plugin's usage, please have a look at the <a href="1.1/faq.html">FAQ</a>.
             </p>
             <p>
                 If you feel like the plugin is missing a feature or has a defect, you can fill a feature request or bug report in the
-                <a href="1.0/issue-tracking.html">issue tracker</a>. When creating a new issue, please provide a comprehensive description of your concern.
+                <a href="1.1/issue-tracking.html">issue tracker</a>. When creating a new issue, please provide a comprehensive description of your concern.
                 Especially for fixing bugs it is crucial that the developers can reproduce your problem. For this reason, entire debug logs,
                 POMs or most preferably little demo projects attached to the issue are very much appreciated. Of course, patches are also welcome.
-                Contributors can check out the project from the <a href="1.0/source-repository.html">source repository</a> and will find supplementary information
+                Contributors can check out the project from the <a href="1.1/source-repository.html">source repository</a> and will find supplementary information
                 in the <a href="http://maven.apache.org/guides/development/guide-helping.html">guide to helping with Maven</a>.
             </p>
             <h1>
@@ -156,7 +156,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
          &lt;plugin&gt;
             &lt;groupId&gt;biz.gabrys.maven.plugins&lt;/groupId&gt;
             &lt;artifactId&gt;lesscss-maven-plugin&lt;/artifactId&gt;
-            &lt;version&gt;1.0&lt;/version&gt;
+            &lt;version&gt;1.1&lt;/version&gt;
             &lt;executions&gt;
                &lt;execution&gt;
                   &lt;id&gt;default-compile&lt;/id&gt;
@@ -182,9 +182,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
                 To provide you with better understanding of some usages of the LessCSS Maven Plugin, you can take a look into the following examples:
             </p>
             <ul>
-                <li><a href="1.0/examples/patterns.html">Using include/exclude patterns</a></li>
-                <li><a href="1.0/examples/multiple-directories.html">Multiple source/output directories</a></li>
-                <li><a href="1.0/examples/local-sources.html">Sources located only on local hard drive</a></li>
+                <li><a href="1.1/examples/patterns.html">Using include/exclude patterns</a></li>
+                <li><a href="1.1/examples/multiple-directories.html">Multiple source/output directories</a></li>
+                <li><a href="1.1/examples/local-sources.html">Sources located only on local hard drive</a></li>
             </ul>
             <h1>
                 <a id="versions" class="anchor" href="#versions" aria-hidden="true">
@@ -197,6 +197,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
             </p>
             <p>
                 List of all available releases:
+                <a href="1.1/">1.1</a>,
                 <a href="1.0/">1.0</a>.
             </p>
             <table>
@@ -207,6 +208,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
                     </tr>
                 </thead>
                 <tbody>
+                    <tr>
+                        <td id="release-1.1">1.1<br />(<a href="1.1/">docs</a>)</td>
+                        <td>
+                            <p>Dependencies:</p>
+                            <ul>
+                                <li>
+                                    Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                                    from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/1.0/">1.0</a>
+                                    to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
                     <tr>
                         <td id="release-1.0">1.0<br />(<a href="1.0/">docs</a>)</td>
                         <td><p>Initial release</p></td>
