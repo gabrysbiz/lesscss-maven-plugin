@@ -1,6 +1,6 @@
 # About
 [![License BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](http://lesscss-maven-plugin.projects.gabrys.biz/license.txt)
-[![Build Status](https://travis-ci.org/gabrysbiz/lesscss-maven-plugin.svg?branch=release%2F1.0)](https://travis-ci.org/gabrysbiz/lesscss-maven-plugin)
+[![Build Status](https://travis-ci.org/gabrysbiz/lesscss-maven-plugin.svg?branch=master)](https://travis-ci.org/gabrysbiz/lesscss-maven-plugin)
 
 This plugin compiles [Less](http://lesscss.org/) files to [CSS](http://www.w3.org/Style/CSS/) stylesheets using [extended version](http://lesscss-extended-compiler.projects.gabrys.biz/) of the [LessCSS Compiler](http://lesscss-compiler.projects.gabrys.biz/).
 
