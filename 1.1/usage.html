@@ -224,8 +224,8 @@
                 To bind the <a href="compile-mojo.html">compile</a> goal of the LessCSS Maven Plugin to a phase in the build cycle,
                 you will need to add the <tt>execution</tt> tag with the <tt>goal</tt> set to <tt>compile</tt>.
                 Optionally, you can bind the plugin to a different build phase by using the <tt>phase</tt> option.
-                For instance, using <tt>process-sources</tt> in the <tt>phase</tt> option will force the compile goal
-                to run each time this phase of the build cycle occurs.
+                For instance, using <tt>process-sources</tt> in the <tt>phase</tt> option will force the
+                <tt>compile</tt> goal to run each time this phase of the build cycle occurs.
             </p>
             
 <p>
@@ -306,7 +306,7 @@
             </p>
             
 <div>
-<pre>mvn biz.gabrys.maven.plugins:lesscss-maven-plugin:compile -Dwatch=true</pre></div>
+<pre>mvn biz.gabrys.maven.plugins:lesscss-maven-plugin:compile -Dlesscss.watch=true</pre></div>
         </div>
     
 
