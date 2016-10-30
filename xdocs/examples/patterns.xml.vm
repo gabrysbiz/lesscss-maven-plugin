@@ -17,7 +17,7 @@
         <section id="ant" name="Ant patterns">
             <p>
                 <a href="http://ant.apache.org/">Ant</a> <a href="http://ant.apache.org/manual/dirtasks.html#patterns">patterns</a>
-                is a default format. The following example includes files with <code>less</code> extension, but which are not located
+                is a default format. The following example includes files with <code>less</code> extension, but whose are not located
                 in <code>vendors</code> directory.
             </p>
             <pre>&lt;project&gt;
@@ -52,7 +52,7 @@
         <section id="regex" name="Regular expressions patterns">
             <p>
                 You can use regular expressions to define include and exclude patterns. File path separator is always equal to
-                <code>/</code>. The following example includes files with <code>less</code> extension, but which are not located
+                <code>/</code>. The following example includes files with <code>less</code> extension, but whose are not located
                 in <code>vendors</code> directory.
             </p>
             <pre>&lt;project&gt;

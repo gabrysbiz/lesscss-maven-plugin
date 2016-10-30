@@ -22,10 +22,13 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 
 import biz.gabrys.lesscss.compiler.CompilerOptions;
 import biz.gabrys.lesscss.compiler.CompilerOptionsBuilder;
@@ -41,6 +44,7 @@ import biz.gabrys.lesscss.extended.compiler.control.processor.PostCompilationPro
 import biz.gabrys.lesscss.extended.compiler.source.LocalSource;
 import biz.gabrys.lesscss.extended.compiler.source.SourceFactory;
 import biz.gabrys.lesscss.extended.compiler.source.SourceFactoryBuilder;
+import biz.gabrys.maven.plugin.util.classpath.ContextClassLoaderExtender;
 import biz.gabrys.maven.plugin.util.io.DestinationFileCreator;
 import biz.gabrys.maven.plugin.util.io.FileScanner;
 import biz.gabrys.maven.plugin.util.io.ScannerFactory;
@@ -61,7 +65,7 @@ import biz.gabrys.maven.plugins.lesscss.compiler.PluginSourceExpirationChecker;
  * <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
  * @since 1.0
  */
-@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
+@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true, requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM)
 public class CompileMojo extends AbstractMojo {
 
     /**
@@ -125,7 +129,7 @@ public class CompileMojo extends AbstractMojo {
     protected String filesetPatternFormat;
 
     /**
-     * List of files to include. Specified as fileset patterns which are relative to the
+     * List of files to include. Specified as fileset patterns whose are relative to the
      * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
      * formats</a>.<br>
      * <b>Default value is</b>: <tt>["&#42;&#42;/&#42;.less"]</tt> for <a href="#filesetPatternFormat">ant</a> or
@@ -136,7 +140,7 @@ public class CompileMojo extends AbstractMojo {
     protected String[] includes = new String[0];
 
     /**
-     * List of files to exclude. Specified as fileset patterns which are relative to the
+     * List of files to exclude. Specified as fileset patterns whose are relative to the
      * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
      * formats</a>.<br>
      * <b>Default value is</b>: <tt>[]</tt>.
@@ -148,13 +152,24 @@ public class CompileMojo extends AbstractMojo {
     /**
      * Defines compiler type used in compilation process. Available options:
      * <ul>
-     * <li><b>full</b> - designed to compile files placed on a local hard drive and in the network</li>
+     * <li><b>full</b> - designed to compile files placed on a local hard drive, in the classpath and in the network
+     * </li>
      * <li><b>local</b> - designed to compile files placed on a local hard drive</li>
      * </ul>
      * @since 1.0
      */
     @Parameter(property = "lesscss.compilerType", defaultValue = "full")
     protected String compilerType;
+
+    /**
+     * Defines types of dependencies whose will be added to plugin classpath (required for <code>classpath://</code>
+     * support).<br>
+     * <b>Notice</b>: ignored when <a href="#compilerType">compiler type</a> is not equal to <code>full</code>.<br>
+     * <b>Default value is</b>: <tt>["jar", "war", "zip"]</tt>.
+     * @since 1.2.0
+     */
+    @Parameter(property = "lesscss.classpathLoadedDependenciesTypes")
+    protected String[] classpathLoadedDependenciesTypes = new String[0];
 
     /**
      * Defines whether the plugin should add comments with sources paths at the beginning and end of each source.<br>
@@ -231,6 +246,9 @@ public class CompileMojo extends AbstractMojo {
     @Parameter(property = "lesscss.workingDirectory", defaultValue = "${project.build.directory}/gabrys-biz-lesscss-maven-plugin")
     protected File workingDirectory;
 
+    @Parameter(defaultValue = "${project}", required = true, readonly = true)
+    private MavenProject project;
+
     private void logParameters() {
         if (getLog().isDebugEnabled()) {
             getLog().debug("Job parameters:");
@@ -245,6 +263,7 @@ public class CompileMojo extends AbstractMojo {
             getLog().debug("\tincludes = " + Arrays.toString(includes) + calculatedIncludes);
             getLog().debug("\texcludes = " + Arrays.toString(excludes));
             getLog().debug("\tcompilerType = " + compilerType);
+            getLog().debug("\tclasspathLoadedDependenciesTypes = " + Arrays.toString(classpathLoadedDependenciesTypes));
             getLog().debug("\taddCommentsWithPaths = " + addCommentsWithPaths + (compress ? " (calculated: false}" : ""));
             getLog().debug("\taddCommentsWithPathsClassPrefix = " + addCommentsWithPathsClassPrefix);
             getLog().debug("\tcompress = " + compress);
@@ -282,9 +301,12 @@ public class CompileMojo extends AbstractMojo {
         if (includes.length == 0) {
             includes = getDefaultIncludes();
         }
+        if (classpathLoadedDependenciesTypes.length == 0) {
+            classpathLoadedDependenciesTypes = new String[] { "jar", "war", "zip" };
+        }
     }
 
-    public void execute() throws MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         logParameters();
         if (skip) {
             getLog().info("Skips job execution");
@@ -292,11 +314,23 @@ public class CompileMojo extends AbstractMojo {
         }
         calculateParameters();
 
+        if ("full".equals(compilerType)) {
+            addDependenciesToClasspath();
+        }
+
         if (watch) {
             runWatchMode();
         } else {
             runCompilation();
         }
+    }
+
+    private void addDependenciesToClasspath() throws MojoExecutionException {
+        if (verbose) {
+            getLog().info("Adding project dependencies to classpath...");
+        }
+        final ContextClassLoaderExtender extender = new ContextClassLoaderExtender(project, getLog());
+        extender.addDependencies(classpathLoadedDependenciesTypes);
     }
 
     private void runWatchMode() throws MojoFailureException {
@@ -376,7 +410,7 @@ public class CompileMojo extends AbstractMojo {
         SourceFactory sourceFactory;
         if ("full".equalsIgnoreCase(compilerType)) {
             cache = new FullCacheBuilder().withDirectory(workingDirectory).create();
-            sourceFactory = new SourceFactoryBuilder().withStandard().create();
+            sourceFactory = new SourceFactoryBuilder().withClasspath().withStandard().create();
             PostCompilationProcessor postProcessor = null;
             if (addCommentsWithPaths) {
                 cache = new FullCacheAdapterBuilder(cache)
@@ -397,10 +431,10 @@ public class CompileMojo extends AbstractMojo {
         if (!force) {
             cache = cache != null ? cache : new FullCacheBuilder().withDirectory(workingDirectory).create();
             if (verbose) {
-                FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache)
-                        .withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
+                final FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache);
+                builder.withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
                 if (getLog().isDebugEnabled()) {
-                    builder = builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
+                    builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
                 }
                 cache = builder.create();
             }

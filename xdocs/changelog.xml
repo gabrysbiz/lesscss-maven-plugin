@@ -14,6 +14,7 @@
                     Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
                     from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
                     to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/LATEST/">2.1.0</a>
+                    - support for <code>classpath://</code>
                 </li>
             </ul>
         </section>
