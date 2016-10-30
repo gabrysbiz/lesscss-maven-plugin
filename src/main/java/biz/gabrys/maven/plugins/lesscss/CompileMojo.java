@@ -65,7 +65,8 @@ import biz.gabrys.maven.plugins.lesscss.compiler.PluginSourceExpirationChecker;
  * <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
  * @since 1.0
  */
-@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true, requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM)
+@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
+        threadSafe = true)
 public class CompileMojo extends AbstractMojo {
 
     /**

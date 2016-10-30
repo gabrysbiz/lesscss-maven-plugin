@@ -82,7 +82,7 @@
         <section name="Invoke from the command-line">
             <p>
                 The goals for the ${project.name} are bound to their respective phases in the build lifecycle.
-                So to compile your sources, you need only to tell Maven util which lifecycle to execute. 
+                So to compile your sources, you need only to tell Maven until which lifecycle to execute. 
                 The following will compile your sources:
             </p>
             <pre>mvn compile</pre>
