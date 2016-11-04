@@ -5,11 +5,11 @@
 
     <groupId>biz.gabrys.maven.plugins</groupId>
     <artifactId>lesscss-maven-plugin</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.0</version>
     <packaging>maven-plugin</packaging>
     <name>LessCSS Maven Plugin</name>
     <description>Compiles Less sources to CSS files using extended version of the LessCSS Compiler.</description>
-    <url>http://lesscss-maven-plugin.projects.gabrys.biz/LATEST/</url>
+    <url>http://lesscss-maven-plugin.projects.gabrys.biz/1.2.0/</url>
 
     <inceptionYear>2015</inceptionYear>
     <organization>
