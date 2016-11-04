@@ -2,7 +2,7 @@
 
 ## 1.2.0
 Dependencies:
-* Upgrade [Extended LessCSS Compiler](http://lesscss-extended-compiler.projects.gabrys.biz/) from [2.0](http://lesscss-extended-compiler.projects.gabrys.biz/2.0/) to [2.1.0](http://lesscss-extended-compiler.projects.gabrys.biz/LATEST/) - support for `classpath://`
+* Upgrade [Extended LessCSS Compiler](http://lesscss-extended-compiler.projects.gabrys.biz/) from [2.0](http://lesscss-extended-compiler.projects.gabrys.biz/2.0/) to [2.1.0](http://lesscss-extended-compiler.projects.gabrys.biz/LATEST/) (support for `classpath://` protocol)
 
 [See documentation](http://lesscss-maven-plugin.projects.gabrys.biz/LATEST/)
 

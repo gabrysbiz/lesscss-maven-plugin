@@ -241,7 +241,8 @@ public class CompileMojo extends AbstractMojo {
     protected boolean watch;
 
     /**
-     * The interval in seconds between the plugin searching for changes in source files.
+     * The interval in seconds between the plugin searching for changes in source files.<br>
+     * <b>Notice</b>: all values smaller than <code>1</code> are treated as <code>1</code>.
      * @since 1.0
      */
     @Parameter(property = "lesscss.watchInterval", defaultValue = "5")
@@ -298,16 +299,17 @@ public class CompileMojo extends AbstractMojo {
         logger.append("watchInterval", watchInterval, new ValueToStringConverter() {
 
             public String convert(final Object value) {
+                final Integer number = (Integer) value;
                 final StringBuilder text = new StringBuilder();
-                text.append(watchInterval);
-                if (watchInterval > 0) {
+                text.append(number);
+                if (number > 0) {
                     text.append(" (");
-                    text.append(new Time(watchInterval * 1000L));
+                    text.append(new Time(number * 1000L));
                     text.append(')');
                 }
                 return text.toString();
             }
-        });
+        }, new SimpleSanitizer(watchInterval > 0, Integer.valueOf(1)));
         logger.append("workingDirectory", workingDirectory);
         logger.debug();
     }
@@ -338,6 +340,9 @@ public class CompileMojo extends AbstractMojo {
         }
         if (classpathLoadedDependenciesTypes.length == 0) {
             classpathLoadedDependenciesTypes = new String[] { "jar", "war", "zip" };
+        }
+        if (watchInterval < 1) {
+            watchInterval = 1;
         }
     }
 
@@ -377,9 +382,8 @@ public class CompileMojo extends AbstractMojo {
             try {
                 Thread.sleep(interval);
             } catch (final InterruptedException e) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return;
-                }
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
