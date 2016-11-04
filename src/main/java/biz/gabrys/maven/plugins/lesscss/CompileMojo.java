@@ -54,7 +54,6 @@ import biz.gabrys.maven.plugin.util.parameter.converter.ValueToStringConverter;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer.ValueContainer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.SimpleSanitizer;
-import biz.gabrys.maven.plugin.util.parameter.sanitizer.ValueSanitizer;
 import biz.gabrys.maven.plugin.util.timer.SystemTimer;
 import biz.gabrys.maven.plugin.util.timer.Time;
 import biz.gabrys.maven.plugin.util.timer.Timer;
@@ -266,17 +265,8 @@ public class CompileMojo extends AbstractMojo {
         final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
         logger.append("skip", skip);
         logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
-        logger.append("force", force, new SimpleSanitizer(!watch, Boolean.FALSE));
-        logger.append("alwaysOverwrite", alwaysOverwrite, new ValueSanitizer() {
-
-            public Object sanitize(final Object value) {
-                return Boolean.TRUE;
-            }
-
-            public boolean isValid(final Object value) {
-                return !(!alwaysOverwrite && !watch && force);
-            }
-        });
+        logger.append("force", force, new SimpleSanitizer(!watch || watch && !force, Boolean.FALSE));
+        logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite), Boolean.TRUE));
         logger.append("sourceDirectory", sourceDirectory);
         logger.append("outputDirectory", outputDirectory);
         logger.append("filesetPatternFormat", filesetPatternFormat);
