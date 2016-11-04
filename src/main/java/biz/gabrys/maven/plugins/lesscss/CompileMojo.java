@@ -49,7 +49,14 @@ import biz.gabrys.maven.plugin.util.io.DestinationFileCreator;
 import biz.gabrys.maven.plugin.util.io.FileScanner;
 import biz.gabrys.maven.plugin.util.io.ScannerFactory;
 import biz.gabrys.maven.plugin.util.io.ScannerPatternFormat;
+import biz.gabrys.maven.plugin.util.parameter.ParametersLogBuilder;
+import biz.gabrys.maven.plugin.util.parameter.converter.ValueToStringConverter;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer.ValueContainer;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.SimpleSanitizer;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.ValueSanitizer;
 import biz.gabrys.maven.plugin.util.timer.SystemTimer;
+import biz.gabrys.maven.plugin.util.timer.Time;
 import biz.gabrys.maven.plugin.util.timer.Timer;
 import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompilationDateCache;
 import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiledCodeCache;
@@ -251,31 +258,58 @@ public class CompileMojo extends AbstractMojo {
     private MavenProject project;
 
     private void logParameters() {
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Job parameters:");
-            getLog().debug("\tskip = " + skip);
-            getLog().debug("\tverbose = " + verbose + " (calculated: true)");
-            getLog().debug("\tforce = " + force + (watch ? " (calculated: false)" : ""));
-            getLog().debug("\talwaysOverwrite = " + alwaysOverwrite + (force ? " (calculated: true)" : ""));
-            getLog().debug("\tsourceDirectory = " + sourceDirectory);
-            getLog().debug("\toutputDirectory = " + outputDirectory);
-            getLog().debug("\tfilesetPatternFormat = " + filesetPatternFormat);
-            final String calculatedIncludes = includes.length == 0 ? " (calculated: " + Arrays.toString(getDefaultIncludes()) + ')' : "";
-            getLog().debug("\tincludes = " + Arrays.toString(includes) + calculatedIncludes);
-            getLog().debug("\texcludes = " + Arrays.toString(excludes));
-            getLog().debug("\tcompilerType = " + compilerType);
-            getLog().debug("\tclasspathLoadedDependenciesTypes = " + Arrays.toString(classpathLoadedDependenciesTypes));
-            getLog().debug("\taddCommentsWithPaths = " + addCommentsWithPaths + (compress ? " (calculated: false}" : ""));
-            getLog().debug("\taddCommentsWithPathsClassPrefix = " + addCommentsWithPathsClassPrefix);
-            getLog().debug("\tcompress = " + compress);
-            getLog().debug("\tcompilerOptions = " + Arrays.toString(compilerOptions));
-            getLog().debug("\tencoding = " + encoding);
-            getLog().debug("\toutputFileFormat = " + outputFileFormat);
-            getLog().debug("\twatch = " + watch);
-            getLog().debug("\twatchInterval = " + watchInterval + " seconds");
-            getLog().debug("\tworkingDirectory = " + workingDirectory);
-            getLog().debug("");
+        if (!getLog().isDebugEnabled()) {
+            return;
         }
+
+        final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
+        logger.append("skip", skip);
+        logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
+        logger.append("force", force, new SimpleSanitizer(!watch, Boolean.FALSE));
+        logger.append("alwaysOverwrite", alwaysOverwrite, new ValueSanitizer() {
+
+            public Object sanitize(final Object value) {
+                return Boolean.TRUE;
+            }
+
+            public boolean isValid(final Object value) {
+                return !(!alwaysOverwrite && !watch && force);
+            }
+        });
+        logger.append("sourceDirectory", sourceDirectory);
+        logger.append("outputDirectory", outputDirectory);
+        logger.append("filesetPatternFormat", filesetPatternFormat);
+        logger.append("includes", includes, new LazySimpleSanitizer(includes.length != 0, new ValueContainer() {
+
+            public Object getValue() {
+                return getDefaultIncludes();
+            }
+        }));
+        logger.append("excludes", excludes);
+        logger.append("compilerType", compilerType);
+        logger.append("classpathLoadedDependenciesTypes", classpathLoadedDependenciesTypes);
+        logger.append("addCommentsWithPaths", addCommentsWithPaths, new SimpleSanitizer(!compress, Boolean.FALSE));
+        logger.append("addCommentsWithPathsClassPrefix", addCommentsWithPathsClassPrefix);
+        logger.append("compress", compress);
+        logger.append("compilerOptions", compilerOptions);
+        logger.append("encoding", encoding);
+        logger.append("outputFileFormat", outputFileFormat);
+        logger.append("watch", watch);
+        logger.append("watchInterval", watchInterval, new ValueToStringConverter() {
+
+            public String convert(final Object value) {
+                final StringBuilder text = new StringBuilder();
+                text.append(watchInterval);
+                if (watchInterval > 0) {
+                    text.append(" (");
+                    text.append(new Time(watchInterval * 1000L));
+                    text.append(')');
+                }
+                return text.toString();
+            }
+        });
+        logger.append("workingDirectory", workingDirectory);
+        logger.debug();
     }
 
     private String[] getDefaultIncludes() {
