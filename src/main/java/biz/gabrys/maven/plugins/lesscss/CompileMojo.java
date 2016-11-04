@@ -22,10 +22,13 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 
 import biz.gabrys.lesscss.compiler.CompilerOptions;
 import biz.gabrys.lesscss.compiler.CompilerOptionsBuilder;
@@ -41,11 +44,18 @@ import biz.gabrys.lesscss.extended.compiler.control.processor.PostCompilationPro
 import biz.gabrys.lesscss.extended.compiler.source.LocalSource;
 import biz.gabrys.lesscss.extended.compiler.source.SourceFactory;
 import biz.gabrys.lesscss.extended.compiler.source.SourceFactoryBuilder;
+import biz.gabrys.maven.plugin.util.classpath.ContextClassLoaderExtender;
 import biz.gabrys.maven.plugin.util.io.DestinationFileCreator;
 import biz.gabrys.maven.plugin.util.io.FileScanner;
 import biz.gabrys.maven.plugin.util.io.ScannerFactory;
 import biz.gabrys.maven.plugin.util.io.ScannerPatternFormat;
+import biz.gabrys.maven.plugin.util.parameter.ParametersLogBuilder;
+import biz.gabrys.maven.plugin.util.parameter.converter.ValueToStringConverter;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer.ValueContainer;
+import biz.gabrys.maven.plugin.util.parameter.sanitizer.SimpleSanitizer;
 import biz.gabrys.maven.plugin.util.timer.SystemTimer;
+import biz.gabrys.maven.plugin.util.timer.Time;
 import biz.gabrys.maven.plugin.util.timer.Timer;
 import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompilationDateCache;
 import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiledCodeCache;
@@ -61,7 +71,8 @@ import biz.gabrys.maven.plugins.lesscss.compiler.PluginSourceExpirationChecker;
  * <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
  * @since 1.0
  */
-@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
+@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
+        threadSafe = true)
 public class CompileMojo extends AbstractMojo {
 
     /**
@@ -83,7 +94,7 @@ public class CompileMojo extends AbstractMojo {
      * Forces the <a href="http://lesscss.org/">Less</a> compiler to always compile the
      * <a href="http://lesscss.org/">Less</a> sources. By default <a href="http://lesscss.org/">Less</a> sources are
      * only compiled when modified (including imports) or the <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheet
-     * does not exists.<br>
+     * does not exist.<br>
      * <b>Notice</b>: always false when <a href="#watch">watch</a> is equal to true.
      * @since 1.0
      */
@@ -125,7 +136,7 @@ public class CompileMojo extends AbstractMojo {
     protected String filesetPatternFormat;
 
     /**
-     * List of files to include. Specified as fileset patterns which are relative to the
+     * List of files to include. Specified as fileset patterns whose are relative to the
      * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
      * formats</a>.<br>
      * <b>Default value is</b>: <tt>["&#42;&#42;/&#42;.less"]</tt> for <a href="#filesetPatternFormat">ant</a> or
@@ -136,7 +147,7 @@ public class CompileMojo extends AbstractMojo {
     protected String[] includes = new String[0];
 
     /**
-     * List of files to exclude. Specified as fileset patterns which are relative to the
+     * List of files to exclude. Specified as fileset patterns whose are relative to the
      * <a href="#sourceDirectory">source directory</a>. See <a href="#filesetPatternFormat">available fileset patterns
      * formats</a>.<br>
      * <b>Default value is</b>: <tt>[]</tt>.
@@ -148,13 +159,24 @@ public class CompileMojo extends AbstractMojo {
     /**
      * Defines compiler type used in compilation process. Available options:
      * <ul>
-     * <li><b>full</b> - designed to compile files placed on a local hard drive and in the network</li>
+     * <li><b>full</b> - designed to compile files placed on a local hard drive, in the classpath and in the network
+     * </li>
      * <li><b>local</b> - designed to compile files placed on a local hard drive</li>
      * </ul>
      * @since 1.0
      */
     @Parameter(property = "lesscss.compilerType", defaultValue = "full")
     protected String compilerType;
+
+    /**
+     * Defines types of dependencies whose will be added to plugin classpath (required for <code>classpath://</code>
+     * support).<br>
+     * <b>Notice</b>: ignored when <a href="#compilerType">compiler type</a> is not equal to <code>full</code>.<br>
+     * <b>Default value is</b>: <tt>["jar", "war", "zip"]</tt>.
+     * @since 1.2.0
+     */
+    @Parameter(property = "lesscss.classpathLoadedDependenciesTypes")
+    protected String[] classpathLoadedDependenciesTypes = new String[0];
 
     /**
      * Defines whether the plugin should add comments with sources paths at the beginning and end of each source.<br>
@@ -218,7 +240,8 @@ public class CompileMojo extends AbstractMojo {
     protected boolean watch;
 
     /**
-     * The interval in seconds between the plugin searching for changes in source files.
+     * The interval in seconds between the plugin searching for changes in source files.<br>
+     * <b>Notice</b>: all values smaller than <code>1</code> are treated as <code>1</code>.
      * @since 1.0
      */
     @Parameter(property = "lesscss.watchInterval", defaultValue = "5")
@@ -231,31 +254,62 @@ public class CompileMojo extends AbstractMojo {
     @Parameter(property = "lesscss.workingDirectory", defaultValue = "${project.build.directory}/gabrys-biz-lesscss-maven-plugin")
     protected File workingDirectory;
 
+    @Parameter(defaultValue = "${project}", required = true, readonly = true)
+    private MavenProject project;
+
     private void logParameters() {
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Job parameters:");
-            getLog().debug("\tskip = " + skip);
-            getLog().debug("\tverbose = " + verbose + " (calculated: true)");
-            getLog().debug("\tforce = " + force + (watch ? " (calculated: false)" : ""));
-            getLog().debug("\talwaysOverwrite = " + alwaysOverwrite + (force ? " (calculated: true)" : ""));
-            getLog().debug("\tsourceDirectory = " + sourceDirectory);
-            getLog().debug("\toutputDirectory = " + outputDirectory);
-            getLog().debug("\tfilesetPatternFormat = " + filesetPatternFormat);
-            final String calculatedIncludes = includes.length == 0 ? " (calculated: " + Arrays.toString(getDefaultIncludes()) + ')' : "";
-            getLog().debug("\tincludes = " + Arrays.toString(includes) + calculatedIncludes);
-            getLog().debug("\texcludes = " + Arrays.toString(excludes));
-            getLog().debug("\tcompilerType = " + compilerType);
-            getLog().debug("\taddCommentsWithPaths = " + addCommentsWithPaths + (compress ? " (calculated: false}" : ""));
-            getLog().debug("\taddCommentsWithPathsClassPrefix = " + addCommentsWithPathsClassPrefix);
-            getLog().debug("\tcompress = " + compress);
-            getLog().debug("\tcompilerOptions = " + Arrays.toString(compilerOptions));
-            getLog().debug("\tencoding = " + encoding);
-            getLog().debug("\toutputFileFormat = " + outputFileFormat);
-            getLog().debug("\twatch = " + watch);
-            getLog().debug("\twatchInterval = " + watchInterval + " seconds");
-            getLog().debug("\tworkingDirectory = " + workingDirectory);
-            getLog().debug("");
+        if (!getLog().isDebugEnabled()) {
+            return;
         }
+
+        final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
+        logger.append("skip", skip);
+        logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
+        logger.append("force", force, new SimpleSanitizer(!watch || watch && !force, Boolean.FALSE));
+        logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite), Boolean.TRUE));
+        logger.append("sourceDirectory", sourceDirectory);
+        logger.append("outputDirectory", outputDirectory);
+        logger.append("filesetPatternFormat", filesetPatternFormat);
+        logger.append("includes", includes, new LazySimpleSanitizer(includes.length != 0, new ValueContainer() {
+
+            public Object getValue() {
+                return getDefaultIncludes();
+            }
+        }));
+        logger.append("excludes", excludes);
+        logger.append("compilerType", compilerType);
+        logger.append("classpathLoadedDependenciesTypes", classpathLoadedDependenciesTypes,
+                new LazySimpleSanitizer(classpathLoadedDependenciesTypes.length != 0, new ValueContainer() {
+
+                    public Object getValue() {
+                        return getDefaultClasspathLoadedDependenciesTypes();
+                    }
+                }));
+        logger.append("addCommentsWithPaths", addCommentsWithPaths, new SimpleSanitizer(!compress, Boolean.FALSE));
+        logger.append("addCommentsWithPathsClassPrefix", addCommentsWithPathsClassPrefix);
+        logger.append("compress", compress);
+        logger.append("compilerOptions", compilerOptions);
+        logger.append("encoding", encoding);
+        logger.append("outputFileFormat", outputFileFormat);
+        logger.append("watch", watch);
+        logger.append("watchInterval", watchInterval, new ValueToStringConverter() {
+
+            private static final long MILLISECONDS_IN_SECOND = 1000L;
+
+            public String convert(final Object value) {
+                final Integer number = (Integer) value;
+                final StringBuilder text = new StringBuilder();
+                text.append(number);
+                if (number > 0) {
+                    text.append(" (");
+                    text.append(new Time(number * MILLISECONDS_IN_SECOND));
+                    text.append(')');
+                }
+                return text.toString();
+            }
+        }, new SimpleSanitizer(watchInterval > 0, Integer.valueOf(1)));
+        logger.append("workingDirectory", workingDirectory);
+        logger.debug();
     }
 
     private String[] getDefaultIncludes() {
@@ -264,6 +318,10 @@ public class CompileMojo extends AbstractMojo {
         } else {
             return new String[] { "^.+\\.less$" };
         }
+    }
+
+    private static String[] getDefaultClasspathLoadedDependenciesTypes() {
+        return new String[] { "jar", "war", "zip" };
     }
 
     private void calculateParameters() {
@@ -282,9 +340,15 @@ public class CompileMojo extends AbstractMojo {
         if (includes.length == 0) {
             includes = getDefaultIncludes();
         }
+        if (classpathLoadedDependenciesTypes.length == 0) {
+            classpathLoadedDependenciesTypes = getDefaultClasspathLoadedDependenciesTypes();
+        }
+        if (watchInterval < 1) {
+            watchInterval = 1;
+        }
     }
 
-    public void execute() throws MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         logParameters();
         if (skip) {
             getLog().info("Skips job execution");
@@ -292,11 +356,23 @@ public class CompileMojo extends AbstractMojo {
         }
         calculateParameters();
 
+        if ("full".equals(compilerType)) {
+            addDependenciesToClasspath();
+        }
+
         if (watch) {
             runWatchMode();
         } else {
             runCompilation();
         }
+    }
+
+    private void addDependenciesToClasspath() throws MojoExecutionException {
+        if (verbose) {
+            getLog().info("Adding project dependencies to classpath...");
+        }
+        final ContextClassLoaderExtender extender = new ContextClassLoaderExtender(project, getLog());
+        extender.addDependencies(classpathLoadedDependenciesTypes);
     }
 
     private void runWatchMode() throws MojoFailureException {
@@ -308,9 +384,8 @@ public class CompileMojo extends AbstractMojo {
             try {
                 Thread.sleep(interval);
             } catch (final InterruptedException e) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return;
-                }
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
@@ -358,8 +433,8 @@ public class CompileMojo extends AbstractMojo {
     private void compileFiles(final Collection<File> files) throws MojoFailureException {
         final PluginCompiler compiler = createCompiler();
         final CompilerOptions options = createOptions();
-        final String sourceFilesText = "source file" + (files.size() != 1 ? "s" : "");
-        getLog().info(String.format("Compiling %s %s to %s", +files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
+        final String sourceFilesText = "source" + (files.size() != 1 ? "s" : "");
+        getLog().info(String.format("Compiling %s %s to %s", files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
         final Timer timer = SystemTimer.getStartedTimer();
         for (final File file : files) {
             compileFile(compiler, options, file);
@@ -376,7 +451,7 @@ public class CompileMojo extends AbstractMojo {
         SourceFactory sourceFactory;
         if ("full".equalsIgnoreCase(compilerType)) {
             cache = new FullCacheBuilder().withDirectory(workingDirectory).create();
-            sourceFactory = new SourceFactoryBuilder().withStandard().create();
+            sourceFactory = new SourceFactoryBuilder().withClasspath().withStandard().create();
             PostCompilationProcessor postProcessor = null;
             if (addCommentsWithPaths) {
                 cache = new FullCacheAdapterBuilder(cache)
@@ -397,10 +472,10 @@ public class CompileMojo extends AbstractMojo {
         if (!force) {
             cache = cache != null ? cache : new FullCacheBuilder().withDirectory(workingDirectory).create();
             if (verbose) {
-                FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache)
-                        .withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
+                final FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache);
+                builder.withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
                 if (getLog().isDebugEnabled()) {
-                    builder = builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
+                    builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
                 }
                 cache = builder.create();
             }
@@ -428,7 +503,7 @@ public class CompileMojo extends AbstractMojo {
         }
         final String compiled = compiler.compile(new LocalSource(source, encoding), options);
         saveCompiledCode(source, compiled, compiler.getCompilationDate());
-        if (verbose) {
+        if (timer != null) {
             getLog().info("Finished in " + timer.stop());
         }
     }

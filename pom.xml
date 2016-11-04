@@ -5,11 +5,11 @@
 
     <groupId>biz.gabrys.maven.plugins</groupId>
     <artifactId>lesscss-maven-plugin</artifactId>
-    <version>1.1</version>
+    <version>1.2.0</version>
     <packaging>maven-plugin</packaging>
     <name>LessCSS Maven Plugin</name>
     <description>Compiles Less sources to CSS files using extended version of the LessCSS Compiler.</description>
-    <url>http://lesscss-maven-plugin.projects.gabrys.biz/1.1/</url>
+    <url>http://lesscss-maven-plugin.projects.gabrys.biz/1.2.0/</url>
 
     <inceptionYear>2015</inceptionYear>
     <organization>
@@ -24,6 +24,30 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <id>agabrys</id>
+            <name>Adam Gabryś</name>
+            <url>http://www.adam.gabrys.biz/</url>
+            <organization>gabrys.biz</organization>
+            <organizationUrl>http://www.gabrys.biz/</organizationUrl>
+            <timezone>Europe/Warsaw</timezone>
+        </developer>
+    </developers>
+    <contributors>
+        <contributor>
+            <name>Robert Pająk</name>
+            <url>http://rpajak.com/</url>
+            <timezone>Europe/Warsaw</timezone>
+        </contributor>
+        <contributor>
+            <name>Ivijan Hađija</name>
+            <email>ivijan1987@gmail.com</email>
+            <url>http://ivijan.hekko24.pl/</url>
+            <timezone>Europe/Warsaw</timezone>
+        </contributor>
+    </contributors>
 
     <prerequisites>
         <maven>2.0.11</maven>
@@ -55,6 +79,42 @@
         </repository>
     </distributionManagement>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>2.0.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+            <version>2.0.11</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>3.5</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>biz.gabrys.lesscss</groupId>
+            <artifactId>extended-compiler</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>biz.gabrys.maven</groupId>
+            <artifactId>plugin-utils</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+    </dependencies>
+
     <repositories>
         <repository>
             <id>sonatype-nexus-snapshots</id>
@@ -69,61 +129,6 @@
         </repository>
     </repositories>
 
-    <developers>
-        <developer>
-            <id>agabrys</id>
-            <name>Adam Gabryś</name>
-            <url>http://www.adam.gabrys.biz/</url>
-            <organization>gabrys.biz</organization>
-            <organizationUrl>http://www.gabrys.biz/</organizationUrl>
-            <timezone>Europe/Warsaw</timezone>
-        </developer>
-    </developers>
-
-    <contributors>
-        <contributor>
-            <name>Robert Pająk</name>
-            <url>http://rpajak.com/</url>
-            <timezone>Europe/Warsaw</timezone>
-        </contributor>
-        <contributor>
-            <name>Ivijan Hađija</name>
-            <email>ivijan1987@gmail.com</email>
-            <url>http://ivijan.hekko24.pl/</url>
-            <timezone>Europe/Warsaw</timezone>
-        </contributor>
-    </contributors>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-            <version>2.0.11</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugin-tools</groupId>
-            <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.4</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>biz.gabrys.maven</groupId>
-            <artifactId>plugin-utils</artifactId>
-            <version>1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>biz.gabrys.lesscss</groupId>
-            <artifactId>extended-compiler</artifactId>
-            <version>2.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -133,11 +138,11 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.6.1</version>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.3</version>
+                    <version>3.6.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -153,7 +158,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>3.0.2</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jxr-plugin</artifactId>
@@ -164,27 +169,27 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.4</version>
+                    <version>3.5</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>2.8.1</version>
+                    <version>2.9</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.4</version>
+                    <version>3.5.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>3.0.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>2.19.1</version>
                 </plugin>
                 <plugin>
                     <groupId>com.mycila</groupId>

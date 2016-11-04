@@ -7,6 +7,17 @@
     </properties>
 
     <body>
+        <section id="release-1.2.0" name="Release 1.2.0">
+            <p>Dependencies:</p>
+            <ul>
+                <li>
+                    Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                    from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
+                    to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.1.0/">2.1.0</a>
+                    (support for <code>classpath://</code> protocol)
+                </li>
+            </ul>
+        </section>
         <section id="release-1.1" name="Release 1.1">
             <p>Dependencies:</p>
             <ul>
@@ -16,6 +27,7 @@
                     to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
                 </li>
             </ul>
+            <p><a href="http://lesscss-maven-plugin.projects.gabrys.biz/2.0/">See documentation</a></p>
         </section>
         <section id="release-1.0" name="Release 1.0">
             <p>Initial release.</p>
