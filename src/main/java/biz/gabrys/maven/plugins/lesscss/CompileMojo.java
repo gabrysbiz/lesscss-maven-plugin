@@ -288,7 +288,13 @@ public class CompileMojo extends AbstractMojo {
         }));
         logger.append("excludes", excludes);
         logger.append("compilerType", compilerType);
-        logger.append("classpathLoadedDependenciesTypes", classpathLoadedDependenciesTypes);
+        logger.append("classpathLoadedDependenciesTypes", classpathLoadedDependenciesTypes,
+                new LazySimpleSanitizer(classpathLoadedDependenciesTypes.length != 0, new ValueContainer() {
+
+                    public Object getValue() {
+                        return getDefaultClasspathLoadedDependenciesTypes();
+                    }
+                }));
         logger.append("addCommentsWithPaths", addCommentsWithPaths, new SimpleSanitizer(!compress, Boolean.FALSE));
         logger.append("addCommentsWithPathsClassPrefix", addCommentsWithPathsClassPrefix);
         logger.append("compress", compress);
@@ -298,13 +304,15 @@ public class CompileMojo extends AbstractMojo {
         logger.append("watch", watch);
         logger.append("watchInterval", watchInterval, new ValueToStringConverter() {
 
+            private static final long MILLISECONDS_IN_SECOND = 1000L;
+
             public String convert(final Object value) {
                 final Integer number = (Integer) value;
                 final StringBuilder text = new StringBuilder();
                 text.append(number);
                 if (number > 0) {
                     text.append(" (");
-                    text.append(new Time(number * 1000L));
+                    text.append(new Time(number * MILLISECONDS_IN_SECOND));
                     text.append(')');
                 }
                 return text.toString();
@@ -320,6 +328,10 @@ public class CompileMojo extends AbstractMojo {
         } else {
             return new String[] { "^.+\\.less$" };
         }
+    }
+
+    private static String[] getDefaultClasspathLoadedDependenciesTypes() {
+        return new String[] { "jar", "war", "zip" };
     }
 
     private void calculateParameters() {
@@ -339,7 +351,7 @@ public class CompileMojo extends AbstractMojo {
             includes = getDefaultIncludes();
         }
         if (classpathLoadedDependenciesTypes.length == 0) {
-            classpathLoadedDependenciesTypes = new String[] { "jar", "war", "zip" };
+            classpathLoadedDependenciesTypes = getDefaultClasspathLoadedDependenciesTypes();
         }
         if (watchInterval < 1) {
             watchInterval = 1;
