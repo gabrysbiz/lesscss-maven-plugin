@@ -264,7 +264,7 @@ public class CompileMojo extends AbstractMojo {
         final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
         logger.append("skip", skip);
         logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
-        logger.append("force", force, new SimpleSanitizer(!watch || watch && !force, Boolean.FALSE));
+        logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
         logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite), Boolean.TRUE));
         logger.append("sourceDirectory", sourceDirectory);
         logger.append("outputDirectory", outputDirectory);
