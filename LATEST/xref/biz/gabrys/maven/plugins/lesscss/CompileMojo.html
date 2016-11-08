@@ -272,7 +272,7 @@
 <a class="jxr_linenumber" name="L264" href="#L264">264</a>         <strong class="jxr_keyword">final</strong> ParametersLogBuilder logger = <strong class="jxr_keyword">new</strong> ParametersLogBuilder(getLog());
 <a class="jxr_linenumber" name="L265" href="#L265">265</a>         logger.append(<span class="jxr_string">"skip"</span>, skip);
 <a class="jxr_linenumber" name="L266" href="#L266">266</a>         logger.append(<span class="jxr_string">"verbose"</span>, verbose, <strong class="jxr_keyword">new</strong> SimpleSanitizer(verbose, Boolean.TRUE));
-<a class="jxr_linenumber" name="L267" href="#L267">267</a>         logger.append(<span class="jxr_string">"force"</span>, force, <strong class="jxr_keyword">new</strong> SimpleSanitizer(!watch || watch &amp;&amp; !force, Boolean.FALSE));
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         logger.append(<span class="jxr_string">"force"</span>, force, <strong class="jxr_keyword">new</strong> SimpleSanitizer(!watch || !force, Boolean.FALSE));
 <a class="jxr_linenumber" name="L268" href="#L268">268</a>         logger.append(<span class="jxr_string">"alwaysOverwrite"</span>, alwaysOverwrite, <strong class="jxr_keyword">new</strong> SimpleSanitizer(!(!watch &amp;&amp; force &amp;&amp; !alwaysOverwrite), Boolean.TRUE));
 <a class="jxr_linenumber" name="L269" href="#L269">269</a>         logger.append(<span class="jxr_string">"sourceDirectory"</span>, sourceDirectory);
 <a class="jxr_linenumber" name="L270" href="#L270">270</a>         logger.append(<span class="jxr_string">"outputDirectory"</span>, outputDirectory);
