@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -265,7 +264,7 @@ public class CompileMojo extends AbstractMojo {
         final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
         logger.append("skip", skip);
         logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
-        logger.append("force", force, new SimpleSanitizer(!watch || watch && !force, Boolean.FALSE));
+        logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
         logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite), Boolean.TRUE));
         logger.append("sourceDirectory", sourceDirectory);
         logger.append("outputDirectory", outputDirectory);
@@ -348,7 +347,7 @@ public class CompileMojo extends AbstractMojo {
         }
     }
 
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoFailureException {
         logParameters();
         if (skip) {
             getLog().info("Skips job execution");
@@ -367,7 +366,7 @@ public class CompileMojo extends AbstractMojo {
         }
     }
 
-    private void addDependenciesToClasspath() throws MojoExecutionException {
+    private void addDependenciesToClasspath() {
         if (verbose) {
             getLog().info("Adding project dependencies to classpath...");
         }

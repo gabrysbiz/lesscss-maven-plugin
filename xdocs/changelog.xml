@@ -7,6 +7,15 @@
     </properties>
 
     <body>
+        <section id="release-1.2.1" name="Release 1.2.1">
+            <p>Dependencies:</p>
+            <ul>
+                <li>
+                    Use <a href="http://lesscss-compiler.projects.gabrys.biz/1.2.2/">LessCSS Compiler 1.2.2</a>
+                    (fixed support for <code>data-uri</code> function - only for <code>local</code> compiler type)
+                </li>
+            </ul>
+        </section>
         <section id="release-1.2.0" name="Release 1.2.0">
             <p>Dependencies:</p>
             <ul>
@@ -17,6 +26,7 @@
                     (support for <code>classpath://</code> protocol)
                 </li>
             </ul>
+            <p><a href="http://lesscss-maven-plugin.projects.gabrys.biz/1.2.0/">See documentation</a></p>
         </section>
         <section id="release-1.1" name="Release 1.1">
             <p>Dependencies:</p>
@@ -27,7 +37,7 @@
                     to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
                 </li>
             </ul>
-            <p><a href="http://lesscss-maven-plugin.projects.gabrys.biz/2.0/">See documentation</a></p>
+            <p><a href="http://lesscss-maven-plugin.projects.gabrys.biz/1.1/">See documentation</a></p>
         </section>
         <section id="release-1.0" name="Release 1.0">
             <p>Initial release.</p>
