@@ -5,10 +5,10 @@
 
     <groupId>biz.gabrys.maven.plugins</groupId>
     <artifactId>lesscss-maven-plugin</artifactId>
-    <version>1.2.2-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>LessCSS Maven Plugin</name>
-    <description>Compiles Less sources to CSS files using extended version of the LessCSS Compiler.</description>
+    <description>Compiles Less sources to CSS files using the LessCSS Compiler.</description>
     <url>http://lesscss-maven-plugin.projects.gabrys.biz/LATEST/</url>
 
     <inceptionYear>2015</inceptionYear>
@@ -50,7 +50,7 @@
     </contributors>
 
     <prerequisites>
-        <maven>2.0.11</maven>
+        <maven>3.0</maven>
     </prerequisites>
 
     <scm>
@@ -87,36 +87,36 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>2.0.11</version>
+            <version>3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-            <version>2.0.11</version>
+            <artifactId>maven-core</artifactId>
+            <version>3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.5</version>
+            <version>3.5.2</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>biz.gabrys.lesscss</groupId>
-            <artifactId>compiler</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>biz.gabrys.lesscss</groupId>
-            <artifactId>extended-compiler</artifactId>
-            <version>2.1.0</version>
-        </dependency>
-        <dependency>
             <groupId>biz.gabrys.maven</groupId>
             <artifactId>plugin-utils</artifactId>
-            <version>1.4.0</version>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>biz.gabrys.lesscss</groupId>
+            <artifactId>lesscss-compiler2</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.6</version>
         </dependency>
     </dependencies>
 
@@ -143,11 +143,11 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.8.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -163,7 +163,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jxr-plugin</artifactId>
@@ -174,19 +174,19 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.5</version>
+                    <version>3.5.2</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>2.9</version>
+                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.0.1</version>
+                    <version>3.1.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.5.1</version>
+                    <version>3.7.1</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
@@ -194,7 +194,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>2.22.0</version>
                 </plugin>
                 <plugin>
                     <groupId>com.mycila</groupId>
@@ -245,8 +245,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                 </configuration>
@@ -279,13 +279,13 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>site</phase>
+                        <phase>pre-site</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <copy todir="${project.build.directory}/site/files">
+                                <copy todir="src/site/resources/files">
                                     <fileset dir="${project.build.directory}">
                                         <include name="${project.artifactId}-${project.version}.jar" />
                                         <include name="${project.artifactId}-${project.version}-sources.jar" />
@@ -309,14 +309,13 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>cim</report>
+                            <report>ci-management</report>
                             <report>dependencies</report>
-                            <report>dependency-info</report>
-                            <report>issue-tracking</report>
-                            <report>license</report>
-                            <report>summary</report>
-                            <report>project-team</report>
+                            <report>issue-management</report>
+                            <report>licenses</report>
                             <report>scm</report>
+                            <report>summary</report>
+                            <report>team</report>
                         </reports>
                     </reportSet>
                 </reportSets>

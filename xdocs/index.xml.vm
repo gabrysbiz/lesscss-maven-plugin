@@ -44,8 +44,8 @@
                 The plugin to run requires:
             </p>
             <ul>
-                <li>Java 5.0 or higher</li>
-                <li>Maven 2.0.11 or higher</li>
+                <li>Java 6 or higher</li>
+                <li>Maven 3 or higher</li>
             </ul>
         </section>
         <section name="Usage">

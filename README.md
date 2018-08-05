@@ -15,8 +15,8 @@ Read a [migration](http://lesscss-maven-plugin.projects.gabrys.biz/LATEST/migrat
 
 # Requirements
 The plugin to run requires:
-* Java 5.0 or higher
-* Maven 2.0.11 or higher
+* Java 6 or higher
+* Maven 3 or higher
 
 # Usage
 General instructions on how to use the LessCSS Maven Plugin can be found on the [usage](http://lesscss-maven-plugin.projects.gabrys.biz/LATEST/usage.html) page. Some more specific use cases are described in the examples given below. Last but not least, users occasionally contribute additional examples, tips or errata to the plugin's [wiki](https://github.com/gabrysbiz/lesscss-maven-plugin/wiki) page.

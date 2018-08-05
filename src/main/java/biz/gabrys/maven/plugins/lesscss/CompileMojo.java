@@ -13,14 +13,8 @@
 package biz.gabrys.maven.plugins.lesscss;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -29,20 +23,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import biz.gabrys.lesscss.compiler.CompilerOptions;
-import biz.gabrys.lesscss.compiler.CompilerOptionsBuilder;
-import biz.gabrys.lesscss.extended.compiler.CachingCompiledCodeExtendedCompiler;
-import biz.gabrys.lesscss.extended.compiler.CachingSourceCodeExtendedCompilerBuilder;
-import biz.gabrys.lesscss.extended.compiler.ExtendedCompiler;
-import biz.gabrys.lesscss.extended.compiler.NonCachingExtendedCompilerBuilder;
-import biz.gabrys.lesscss.extended.compiler.cache.FullCache;
-import biz.gabrys.lesscss.extended.compiler.cache.FullCacheAdapterBuilder;
-import biz.gabrys.lesscss.extended.compiler.cache.FullCacheBuilder;
-import biz.gabrys.lesscss.extended.compiler.control.expiration.CompiledSourceExpirationChecker;
-import biz.gabrys.lesscss.extended.compiler.control.processor.PostCompilationProcessor;
-import biz.gabrys.lesscss.extended.compiler.source.LocalSource;
-import biz.gabrys.lesscss.extended.compiler.source.SourceFactory;
-import biz.gabrys.lesscss.extended.compiler.source.SourceFactoryBuilder;
+import biz.gabrys.lesscss.compiler2.LessCompiler;
+import biz.gabrys.lesscss.compiler2.LessOptions;
 import biz.gabrys.maven.plugin.util.classpath.ContextClassLoaderExtender;
 import biz.gabrys.maven.plugin.util.io.DestinationFileCreator;
 import biz.gabrys.maven.plugin.util.io.FileScanner;
@@ -54,20 +36,12 @@ import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer.ValueContainer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.SimpleSanitizer;
 import biz.gabrys.maven.plugin.util.timer.SystemTimer;
-import biz.gabrys.maven.plugin.util.timer.Time;
+import biz.gabrys.maven.plugin.util.timer.TimeSpan;
 import biz.gabrys.maven.plugin.util.timer.Timer;
-import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompilationDateCache;
-import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiledCodeCache;
-import biz.gabrys.maven.plugins.lesscss.compiler.LoggingCompiler;
-import biz.gabrys.maven.plugins.lesscss.compiler.PathInCommentPostProcessor;
-import biz.gabrys.maven.plugins.lesscss.compiler.PathInCommentSourceCodeCache;
-import biz.gabrys.maven.plugins.lesscss.compiler.PluginCompiler;
-import biz.gabrys.maven.plugins.lesscss.compiler.PluginSourceExpirationChecker;
 
 /**
  * Compiles <a href="http://lesscss.org/">Less</a> files to <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets
- * using <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">extended version</a> of the
- * <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
+ * using the <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>.
  * @since 1.0
  */
 @Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.RUNTIME_PLUS_SYSTEM,
@@ -156,64 +130,93 @@ public class CompileMojo extends AbstractMojo {
     protected String[] excludes = new String[0];
 
     /**
-     * Defines compiler type used in compilation process. Available options:
-     * <ul>
-     * <li><b>full</b> - designed to compile files placed on a local hard drive, in the classpath and in the network
-     * </li>
-     * <li><b>local</b> - designed to compile files placed on a local hard drive</li>
-     * </ul>
-     * @since 1.0
-     */
-    @Parameter(property = "lesscss.compilerType", defaultValue = "full")
-    protected String compilerType;
-
-    /**
-     * Defines types of dependencies whose will be added to plugin classpath (required for <code>classpath://</code>
-     * support).<br>
-     * <b>Notice</b>: ignored when <a href="#compilerType">compiler type</a> is not equal to <code>full</code>.<br>
-     * <b>Default value is</b>: <tt>["jar", "war", "zip"]</tt>.
-     * @since 1.2.0
-     */
-    @Parameter(property = "lesscss.classpathLoadedDependenciesTypes")
-    protected String[] classpathLoadedDependenciesTypes = new String[0];
-
-    /**
      * Defines whether the plugin should add comments with sources paths at the beginning and end of each source.<br>
      * <b>Notice</b>: always false when <a href="#compilerType">compiler type</a> is equal to <b>local</b> or
      * <a href="#compress">compress</a> is equal to true.<br>
      * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
      * @since 1.0
      */
-    @Parameter(property = "lesscss.addCommentsWithPaths", defaultValue = "false")
-    protected boolean addCommentsWithPaths;
+    // @Parameter(property = "lesscss.addCommentsWithPaths", defaultValue = "false")
+    // protected boolean addCommentsWithPaths;
 
     /**
      * Restricted class name prefix used to create comments with sources paths.<br>
      * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
      * @since 1.0
      */
-    @Parameter(property = "lesscss.addCommentsWithPathsClassPrefix", defaultValue = "gabrys-biz-comment-with-path-marker-class")
-    protected String addCommentsWithPathsClassPrefix;
+    // @Parameter(property = "lesscss.addCommentsWithPathsClassPrefix", defaultValue =
+    // "gabrys-biz-comment-with-path-marker-class")
+    // protected String addCommentsWithPathsClassPrefix;
 
     /**
-     * Whether the compiler should minify the <a href="http://www.w3.org/Style/CSS/">CSS</a> code.<br>
-     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter
-     * and <a href="#force">force</a> is equal to false.
-     * @since 1.0
-     */
-    @Parameter(property = "lesscss.compress", defaultValue = "false")
-    protected boolean compress;
-
-    /**
-     * List of options passed to the compiler. See
-     * <a href="http://lesscss.org/usage/index.html#command-line-usage-options">Less options</a><br>
-     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
-     * <br>
-     * <b>Default value is</b>: <tt>[]</tt>.
-     * @since 1.0
+     * Defines <a href="http://lesscss.org/usage/index.html#less-options">Less compiler options</a> responsible for
+     * controlling the compilation process.<br>
+     * Base options:
+     * <ul>
+     * <li><b>compress</b> - whether a CSS code should be compressed (default: <code>false</code>)</li>
+     * <li><b>ieCompatibility</b> - whether a CSS code should be compatible with Internet Explorer browser (default:
+     * <code>true</code>)</li>
+     * <li><b>includePaths</b> - available include paths (default: <code>[]</code>)</li>
+     * <li><b>javaScript</b> - whether a compiler should allow usage of JavaScript language (default:
+     * <code>true</code>)</li>
+     * <li><b>lineNumbers</b> - whether a compiler should generate inline source-mapping:
+     * <ul>
+     * <li><i>empty</i> - line numbers won't be put in CSS code (default)</li>
+     * <li><b>comments</b> - line numbers will be put in CSS comments blocks</li>
+     * <li><b>mediaquery</b> - line numbers will be put in &#64;media queries</li>
+     * <li><b>all</b> - line numbers will be put in CSS comments blocks and &#64;media queries</li>
+     * </ul>
+     * </li>
+     * <li><b>relativeUrls</b> - whether a compiler should rewrite relative URLs (default: <code>false</code>)</li>
+     * <li><b>rootPath</b> - a path which will be added to every generated import and URL in CSS code (default:
+     * <code>null</code>)</li>
+     * <li><b>silent</b> - whether a compiler shouldn't log compilation warnings (default: <code>false</code>)</li>
+     * <li><b>strictImports</b> - whether a compiler should disallow an @import operation inside of either @media blocks
+     * or other selector blocks (default: <code>false</code>)</li>
+     * <li><b>strictMath</b> - whether a compiler should try and process all maths in Less code (default:
+     * <code>false</code>)</li>
+     * <li><b>strictUnits</b> - whether a compiler should guess units in Less code when it does maths (default:
+     * <code>false</code>)</li>
+     * </ul>
+     * Source Map options:
+     * <ul>
+     * <li><b>sourceMapBasePath</b> - a path that will be removed from each of the Less file paths inside the Source Map
+     * and also from the path to the map file specified in your output CSS (default: <code>null</code>)</li>
+     * <li><b>sourceMapLessInline</b> - whether a compiler should include all of the Less files in to the Source Map
+     * (default: <code>false</code>)</li>
+     * <li><b>sourceMapRootPath</b> - a path that will be prepended to each of the Less file paths inside the Source Map
+     * and also to the path to the map file specified in your output CSS (default: <code>null</code>)</li>
+     * <li><b>sourceMapUrl</b> - a path which will overwrite the URL in the CSS that points at the Source Map file
+     * (default: <code>null</code>)</li>
+     * </ul>
+     * Additional options:
+     * <ul>
+     * <li><b>banner</b> - a banner which will be inserted to source files before the compilation (default:
+     * <code>null</code>):
+     * <ul>
+     * <li><b>file</b> - loads banner form the specified file (ignored when <b>text</b> is set)</li>
+     * <li><b>text</b> - uses the specified text</li>
+     * </ul>
+     * </li>
+     * <li><b>globalVariables</b> - variables that can be referenced by the files (default: <code>{}</code>)</li>
+     * <li><b>modifyVariables</b> - variables that can overwrite variables defined in the files (default:
+     * <code>{}</code>)</li>
+     * </ul>
+     * Non-standard options:
+     * <ul>
+     * <li><b>httpEnabled</b> - whether the plugin allows using <code>http://</code> protocol (default
+     * <code>true</code>)</li>
+     * <li><b>ftpEnabled</b> - whether the plugin allows using <code>ftp://</code> protocol (default
+     * <code>true</code>)</li>
+     * <li><b>classpathEnabled</b> - whether the plugin allows using <code>classpath://</code> protocol (default
+     * <code>true</code>)</li>
+     * <li><b>classpathLoadedDependenciesTypes</b> - a comma separated types list of dependencies whose will be added to
+     * the plugin class path (default: <code>jar,war</code>)</li>
+     * </ul>
+     * @since 2.0.0
      */
     @Parameter
-    protected String[] compilerOptions = new String[0];
+    protected Options options = new Options();
 
     /**
      * Sources encoding.<br>
@@ -264,30 +267,43 @@ public class CompileMojo extends AbstractMojo {
         final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
         logger.append("skip", skip);
         logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
-        logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
-        logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite), Boolean.TRUE));
+        // logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
+        // logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite),
+        // Boolean.TRUE));
         logger.append("sourceDirectory", sourceDirectory);
         logger.append("outputDirectory", outputDirectory);
         logger.append("filesetPatternFormat", filesetPatternFormat);
         logger.append("includes", includes, new LazySimpleSanitizer(includes.length != 0, new ValueContainer() {
 
+            @Override
             public Object getValue() {
                 return getDefaultIncludes();
             }
         }));
         logger.append("excludes", excludes);
-        logger.append("compilerType", compilerType);
-        logger.append("classpathLoadedDependenciesTypes", classpathLoadedDependenciesTypes,
-                new LazySimpleSanitizer(classpathLoadedDependenciesTypes.length != 0, new ValueContainer() {
-
-                    public Object getValue() {
-                        return getDefaultClasspathLoadedDependenciesTypes();
-                    }
-                }));
-        logger.append("addCommentsWithPaths", addCommentsWithPaths, new SimpleSanitizer(!compress, Boolean.FALSE));
-        logger.append("addCommentsWithPathsClassPrefix", addCommentsWithPathsClassPrefix);
-        logger.append("compress", compress);
-        logger.append("compilerOptions", compilerOptions);
+        logger.append("options.silent", options.silent);
+        logger.append("options.strictImports", options.strictImports);
+        logger.append("options.compress", options.compress);
+        logger.append("options.ieCompatibility", options.ieCompatibility);
+        logger.append("options.javaScript", options.javaScript);
+        logger.append("options.includePaths", options.includePaths);
+        logger.append("options.lineNumbers", options.lineNumbers);
+        logger.append("options.rootPath", options.rootPath);
+        logger.append("options.relativeUrls", options.relativeUrls);
+        logger.append("options.strictMath", options.strictMath);
+        logger.append("options.strictUnits", options.strictUnits);
+        logger.append("options.sourceMapRootPath", options.sourceMapRootPath);
+        logger.append("options.sourceMapBasePath", options.sourceMapBasePath);
+        logger.append("options.sourceMapLessInline", options.sourceMapLessInline);
+        logger.append("options.sourceMapUrl", options.sourceMapUrl);
+        logger.append("options.banner.file", options.banner.file);
+        logger.append("options.banner.text", options.banner.text);
+        logger.append("options.globalVariables", options.globalVariables);
+        logger.append("options.modifyVariables", options.modifyVariables);
+        logger.append("options.httpEnabled", options.httpEnabled);
+        logger.append("options.ftpEnabled", options.ftpEnabled);
+        logger.append("options.classpathEnabled", options.classpathEnabled);
+        logger.append("options.classpathLoadedDependenciesTypes", options.classpathLoadedDependenciesTypes);
         logger.append("encoding", encoding);
         logger.append("outputFileFormat", outputFileFormat);
         logger.append("watch", watch);
@@ -295,13 +311,14 @@ public class CompileMojo extends AbstractMojo {
 
             private static final long MILLISECONDS_IN_SECOND = 1000L;
 
+            @Override
             public String convert(final Object value) {
                 final Integer number = (Integer) value;
                 final StringBuilder text = new StringBuilder();
                 text.append(number);
                 if (number > 0) {
                     text.append(" (");
-                    text.append(new Time(number * MILLISECONDS_IN_SECOND));
+                    text.append(new TimeSpan(number * MILLISECONDS_IN_SECOND));
                     text.append(')');
                 }
                 return text.toString();
@@ -319,34 +336,19 @@ public class CompileMojo extends AbstractMojo {
         }
     }
 
-    private static String[] getDefaultClasspathLoadedDependenciesTypes() {
-        return new String[] { "jar", "war", "zip" };
-    }
-
     private void calculateParameters() {
         if (getLog().isDebugEnabled()) {
             verbose = true;
         }
-        if (watch) {
-            force = false;
-        }
-        if (force) {
-            alwaysOverwrite = true;
-        }
-        if (compress) {
-            addCommentsWithPaths = false;
-        }
         if (includes.length == 0) {
             includes = getDefaultIncludes();
-        }
-        if (classpathLoadedDependenciesTypes.length == 0) {
-            classpathLoadedDependenciesTypes = getDefaultClasspathLoadedDependenciesTypes();
         }
         if (watchInterval < 1) {
             watchInterval = 1;
         }
     }
 
+    @Override
     public void execute() throws MojoFailureException {
         logParameters();
         if (skip) {
@@ -355,7 +357,7 @@ public class CompileMojo extends AbstractMojo {
         }
         calculateParameters();
 
-        if ("full".equals(compilerType)) {
+        if (options.classpathEnabled) {
             addDependenciesToClasspath();
         }
 
@@ -371,7 +373,11 @@ public class CompileMojo extends AbstractMojo {
             getLog().info("Adding project dependencies to classpath...");
         }
         final ContextClassLoaderExtender extender = new ContextClassLoaderExtender(project, getLog());
-        extender.addDependencies(classpathLoadedDependenciesTypes);
+        final String[] types = options.classpathLoadedDependenciesTypes.split(",");
+        for (int i = 0; i < types.length; ++i) {
+            types[i] = types[i].trim();
+        }
+        extender.addDependencies(types);
     }
 
     private void runWatchMode() throws MojoFailureException {
@@ -399,10 +405,6 @@ public class CompileMojo extends AbstractMojo {
             getLog().warn("No sources to compile");
             return;
         }
-
-        if (force) {
-            deleteWorkingDirectory();
-        }
         compileFiles(files);
     }
 
@@ -415,118 +417,64 @@ public class CompileMojo extends AbstractMojo {
         return scanner.getFiles(sourceDirectory, includes, excludes);
     }
 
-    private void deleteWorkingDirectory() throws MojoFailureException {
-        if (!workingDirectory.exists()) {
-            return;
-        }
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Deleting working directory: " + workingDirectory.getAbsolutePath());
-        }
-        try {
-            FileUtils.deleteDirectory(workingDirectory);
-        } catch (final IOException e) {
-            throw new MojoFailureException(String.format("Cannot delete working directory: %s", workingDirectory.getAbsolutePath()), e);
-        }
-    }
-
     private void compileFiles(final Collection<File> files) throws MojoFailureException {
-        final PluginCompiler compiler = createCompiler();
-        final CompilerOptions options = createOptions();
         final String sourceFilesText = "source" + (files.size() != 1 ? "s" : "");
         getLog().info(String.format("Compiling %s %s to %s", files.size(), sourceFilesText, outputDirectory.getAbsolutePath()));
+
+        final LessCompiler compiler = new LessCompiler();
         final Timer timer = SystemTimer.getStartedTimer();
+        final LessOptions lessOptions = createOptions();
         for (final File file : files) {
-            compileFile(compiler, options, file);
+            compileFile(compiler, file, lessOptions);
         }
+
         getLog().info(String.format("Finished %s compilation in %s", sourceFilesText, timer.stop()));
     }
 
-    private PluginCompiler createCompiler() {
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Creating compiler...");
+    private LessOptions createOptions() throws MojoFailureException {
+        try {
+            return options.toLessOptions(encoding);
+        } catch (final Exception e) {
+            throw new MojoFailureException("Cannot prepare compiler configuration", e);
         }
-        FullCache cache = null;
-        ExtendedCompiler compiler;
-        SourceFactory sourceFactory;
-        if ("full".equalsIgnoreCase(compilerType)) {
-            cache = new FullCacheBuilder().withDirectory(workingDirectory).create();
-            sourceFactory = new SourceFactoryBuilder().withClasspath().withStandard().create();
-            PostCompilationProcessor postProcessor = null;
-            if (addCommentsWithPaths) {
-                cache = new FullCacheAdapterBuilder(cache)
-                        .withSourceCodeCache(new PathInCommentSourceCodeCache(cache, addCommentsWithPathsClassPrefix)).create();
-                postProcessor = new PathInCommentPostProcessor(addCommentsWithPathsClassPrefix);
-            }
-            compiler = new CachingSourceCodeExtendedCompilerBuilder(cache).withSourceFactory(sourceFactory).withPostProcessor(postProcessor)
-                    .create();
-        } else if ("local".equalsIgnoreCase(compilerType)) {
-            sourceFactory = force ? null : new SourceFactoryBuilder().withLocal().create();
-            compiler = new NonCachingExtendedCompilerBuilder().create();
-        } else {
-            throw new IllegalArgumentException(String.format("Cannot find compiler for type \"%s\"", compilerType));
-        }
-        if (verbose) {
-            compiler = new LoggingCompiler(compiler, getLog());
-        }
-        if (!force) {
-            cache = cache != null ? cache : new FullCacheBuilder().withDirectory(workingDirectory).create();
-            if (verbose) {
-                final FullCacheAdapterBuilder builder = new FullCacheAdapterBuilder(cache);
-                builder.withCompiledCodeCache(new LoggingCompiledCodeCache(cache, getLog()));
-                if (getLog().isDebugEnabled()) {
-                    builder.withCompilationDateCache(new LoggingCompilationDateCache(cache, getLog()));
-                }
-                cache = builder.create();
-            }
-            final CompiledSourceExpirationChecker expirationChecker = new PluginSourceExpirationChecker(cache, sourceFactory, getLog());
-            compiler = new CachingCompiledCodeExtendedCompiler(compiler, expirationChecker, cache, cache);
-        }
-        return new PluginCompiler(compiler, cache);
     }
 
-    private CompilerOptions createOptions() {
-        final CompilerOptionsBuilder builder = new CompilerOptionsBuilder();
-        builder.setMinified(compress);
-        final CompilerOptions options = builder.create();
-        final List<Object> arguments = new ArrayList<Object>();
-        arguments.addAll(options.getArguments());
-        arguments.addAll(Arrays.asList(compilerOptions));
-        return new CompilerOptions(arguments);
-    }
-
-    private void compileFile(final PluginCompiler compiler, final CompilerOptions options, final File source) throws MojoFailureException {
+    private void compileFile(final LessCompiler compiler, final File source, final LessOptions options) throws MojoFailureException {
         Timer timer = null;
         if (verbose) {
             getLog().info("Processing Less source: " + source.getAbsolutePath());
             timer = SystemTimer.getStartedTimer();
         }
-        final String compiled = compiler.compile(new LocalSource(source, encoding), options);
-        saveCompiledCode(source, compiled, compiler.getCompilationDate());
+        final File destination = new DestinationFileCreator(sourceDirectory, outputDirectory, outputFileFormat).create(source);
+        compiler.compile(source, destination, options);
         if (timer != null) {
             getLog().info("Finished in " + timer.stop());
         }
     }
 
-    private void saveCompiledCode(final File source, final String compiled, final Date compilationDate) throws MojoFailureException {
-        final File destination = new DestinationFileCreator(sourceDirectory, outputDirectory, outputFileFormat).create(source);
-
-        final boolean skipsFileSaving = !force && !alwaysOverwrite && destination.exists()
-                && compilationDate.before(new Date(destination.lastModified()));
-        if (skipsFileSaving) {
-            if (verbose) {
-                getLog().info("Skips saving CSS compiled code to file, because cached version is older than destination file: "
-                        + destination.getAbsolutePath());
-            }
-            return;
-        }
-
-        if (verbose) {
-            getLog().info("Saving CSS code to " + destination.getAbsolutePath());
-        }
-        try {
-            FileUtils.write(destination, compiled, encoding);
-        } catch (final IOException e) {
-            throw new MojoFailureException(String.format("Cannot save CSS compiled code to file: %s", destination.getAbsolutePath()), e);
-        }
-    }
+    // private void saveCompiledCode(final File source, final String compiled, final Date compilationDate) throws
+    // MojoFailureException {
+    // final File destination = new DestinationFileCreator(sourceDirectory, outputDirectory,
+    // outputFileFormat).create(source);
+    //
+    // final boolean skipsFileSaving = !force && !alwaysOverwrite && destination.exists()
+    // && compilationDate.before(new Date(destination.lastModified()));
+    // if (skipsFileSaving) {
+    // if (verbose) {
+    // getLog().info("Skips saving CSS compiled code to file, because cached version is older than destination file: "
+    // + destination.getAbsolutePath());
+    // }
+    // return;
+    // }
+    //
+    // if (verbose) {
+    // getLog().info("Saving CSS code to " + destination.getAbsolutePath());
+    // }
+    // try {
+    // FileUtils.write(destination, compiled, encoding);
+    // } catch (final IOException e) {
+    // throw new MojoFailureException(String.format("Cannot save CSS compiled code to file: %s",
+    // destination.getAbsolutePath()), e);
+    // }
+    // }
 }

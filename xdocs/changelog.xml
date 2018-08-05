@@ -7,6 +7,31 @@
     </properties>
 
     <body>
+        <section id="release-2.0.0" name="Release 2.0.0">
+            <p>Features:</p>
+            <ul>
+                <li>Set compatibility with Java 6+</li>
+                <li>Set compatibility with Maven 3+</li>
+            </ul>
+            <p>Dependencies:</p>
+            <ul>
+                <li>
+                    Upgraded <a href="http://lesscss-compiler.projects.gabrys.biz/">LessCSS Compiler</a>
+                    from <a href="http://lesscss-compiler.projects.gabrys.biz/1.2.2/">1.2.2</a>
+                    to <a href="http://lesscss-compiler.projects.gabrys.biz/2.0.0/">2.0.0</a>
+                    (<a href="https://github.com/gabrysbiz/lesscss-maven-plugin/issues/7">#7</a>)
+                </li>
+                <li>
+                    Removed <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                    (<a href="https://github.com/gabrysbiz/lesscss-maven-plugin/issues/7">#7</a>)
+                </li>
+                <li>
+                    Upgraded <a href="http://maven-plugin-utils.projects.gabrys.biz/">Maven Plugin Utils</a>
+                    from <a href="http://maven-plugin-utils.projects.gabrys.biz/1.4.0/">1.4.0</a>
+                    to <a href="http://maven-plugin-utils.projects.gabrys.biz/2.0.0/">2.0.0</a>
+                </li>
+            </ul>
+        </section>
         <section id="release-1.2.1" name="Release 1.2.1">
             <p>Dependencies:</p>
             <ul>
@@ -20,7 +45,7 @@
             <p>Dependencies:</p>
             <ul>
                 <li>
-                    Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                    Upgraded <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
                     from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
                     to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.1.0/">2.1.0</a>
                     (support for <code>classpath://</code> protocol)
@@ -32,7 +57,7 @@
             <p>Dependencies:</p>
             <ul>
                 <li>
-                    Upgrade <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
+                    Upgraded <a href="http://lesscss-extended-compiler.projects.gabrys.biz/">Extended LessCSS Compiler</a>
                     from <a href="http://lesscss-extended-compiler.projects.gabrys.biz/1.0/">1.0</a>
                     to <a href="http://lesscss-extended-compiler.projects.gabrys.biz/2.0/">2.0</a>
                 </li>
