@@ -13,6 +13,10 @@
                 <li>Set compatibility with Java 6+</li>
                 <li>Set compatibility with Maven 3+</li>
             </ul>
+            <p>Bugs:</p>
+            <ul>
+                <li>Fixed <code>data-uri</code> function not working (<a href="https://github.com/gabrysbiz/lesscss-maven-plugin/issues/5">#5</a>)</li>
+            </ul>
             <p>Dependencies:</p>
             <ul>
                 <li>
