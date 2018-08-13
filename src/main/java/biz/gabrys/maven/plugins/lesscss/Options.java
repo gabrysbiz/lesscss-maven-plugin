@@ -19,7 +19,6 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
-import biz.gabrys.lesscss.compiler2.FileSystemOptionsBuilder;
 import biz.gabrys.lesscss.compiler2.LessOptions;
 import biz.gabrys.lesscss.compiler2.LessOptionsBuilder;
 import biz.gabrys.lesscss.compiler2.LessVariableOptionsBuilder;
@@ -48,23 +47,7 @@ public class Options {
     protected Map<String, String> globalVariables = new LinkedHashMap<String, String>();
     protected Map<String, String> modifyVariables = new LinkedHashMap<String, String>();
 
-    protected boolean httpEnabled = true;
-    protected boolean ftpEnabled = true;
-    protected boolean classpathEnabled = true;
-    protected String classpathLoadedDependenciesTypes = "jar,war";
-
     public LessOptions toLessOptions(final String encoding) throws IOException {
-        final FileSystemOptionsBuilder fileSystemOptionsBuilder = new FileSystemOptionsBuilder();
-        if (httpEnabled) {
-            fileSystemOptionsBuilder.appendHttp();
-        }
-        if (ftpEnabled) {
-            fileSystemOptionsBuilder.appendFtp();
-        }
-        if (classpathEnabled) {
-            fileSystemOptionsBuilder.appendClassPath();
-        }
-        fileSystemOptionsBuilder.appendLocal();
 
         return new LessOptionsBuilder() //
                 .silent(silent) //
@@ -83,7 +66,6 @@ public class Options {
                 .sourceMapLessInline(sourceMapLessInline) //
                 .sourceMapUrl(sourceMapUrl) //
                 .encoding(encoding) //
-                .fileSystems(fileSystemOptionsBuilder.build()) //
                 .banner(bannerToString(encoding)) //
                 .globalVariables(new LessVariableOptionsBuilder().append(globalVariables).build()) //
                 .modifyVariables(new LessVariableOptionsBuilder().append(modifyVariables).build()) //

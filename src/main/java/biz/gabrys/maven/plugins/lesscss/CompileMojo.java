@@ -13,6 +13,7 @@
 package biz.gabrys.maven.plugins.lesscss;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -31,13 +32,13 @@ import biz.gabrys.maven.plugin.util.io.FileScanner;
 import biz.gabrys.maven.plugin.util.io.ScannerFactory;
 import biz.gabrys.maven.plugin.util.io.ScannerPatternFormat;
 import biz.gabrys.maven.plugin.util.parameter.ParametersLogBuilder;
-import biz.gabrys.maven.plugin.util.parameter.converter.ValueToStringConverter;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.LazySimpleSanitizer.ValueContainer;
 import biz.gabrys.maven.plugin.util.parameter.sanitizer.SimpleSanitizer;
 import biz.gabrys.maven.plugin.util.timer.SystemTimer;
-import biz.gabrys.maven.plugin.util.timer.TimeSpan;
 import biz.gabrys.maven.plugin.util.timer.Timer;
+import biz.gabrys.maven.plugins.lesscss.log.FileSystemsCustomToStringConverter;
+import biz.gabrys.maven.plugins.lesscss.log.WatchIntervalToStringConverter;
 
 /**
  * Compiles <a href="http://lesscss.org/">Less</a> files to <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheets
@@ -66,21 +67,13 @@ public class CompileMojo extends AbstractMojo {
     /**
      * Forces the <a href="http://lesscss.org/">Less</a> compiler to always compile the
      * <a href="http://lesscss.org/">Less</a> sources. By default <a href="http://lesscss.org/">Less</a> sources are
-     * only compiled when modified (including imports) or the <a href="http://www.w3.org/Style/CSS/">CSS</a> stylesheet
-     * does not exist.<br>
+     * only compiled when modified (including dependencies) or the <a href="http://www.w3.org/Style/CSS/">CSS</a>
+     * stylesheet does not exist.<br>
      * <b>Notice</b>: always false when <a href="#watch">watch</a> is equal to true.
      * @since 1.0
      */
     @Parameter(property = "lesscss.force", defaultValue = "false")
     protected boolean force;
-
-    /**
-     * Defines whether the plugin should always overwrite destination files (also if sources did not changed).<br>
-     * <b>Notice</b>: always true when <a href="#force">force</a> is equal to true.
-     * @since 1.0
-     */
-    @Parameter(property = "lesscss.alwaysOverwrite", defaultValue = "false")
-    protected boolean alwaysOverwrite;
 
     /**
      * The directory which contains the <a href="http://lesscss.org/">Less</a> sources.
@@ -202,21 +195,54 @@ public class CompileMojo extends AbstractMojo {
      * <li><b>modifyVariables</b> - variables that can overwrite variables defined in the files (default:
      * <code>{}</code>)</li>
      * </ul>
-     * Non-standard options:
-     * <ul>
-     * <li><b>httpEnabled</b> - whether the plugin allows using <code>http://</code> protocol (default
-     * <code>true</code>)</li>
-     * <li><b>ftpEnabled</b> - whether the plugin allows using <code>ftp://</code> protocol (default
-     * <code>true</code>)</li>
-     * <li><b>classpathEnabled</b> - whether the plugin allows using <code>classpath://</code> protocol (default
-     * <code>true</code>)</li>
-     * <li><b>classpathLoadedDependenciesTypes</b> - a comma separated types list of dependencies whose will be added to
-     * the plugin class path (default: <code>jar,war</code>)</li>
-     * </ul>
      * @since 2.0.0
      */
     @Parameter
     protected Options options = new Options();
+
+    /**
+     * Defines file systems used to read files content.
+     * <ul>
+     * <li><b>httpEnabled</b> - whether the plugin allows using <code>http://</code> and <code>https://</code> protocols
+     * (default <code>true</code>)</li>
+     * <li><b>ftpEnabled</b> - whether the plugin allows using <code>ftp://</code> protocol (default
+     * <code>true</code>)</li>
+     * <li><b>classpathEnabled</b> - whether the plugin allows using <code>classpath://</code> protocol (default
+     * <code>true</code>)</li>
+     * <li><b>classpathDependenciesTypes</b> - a comma separated types list of dependencies whose will be added to the
+     * plugin class path (default: <code>jar,war</code>)</li>
+     * <li><b>localEnabled</b> - whether the plugin allows using files stored on a local hard drive (default
+     * <code>true</code>)</li>
+     * <li><b>customs</b> - custom file systems (inserted before <b>httpEnabled</b>, <b>ftpEnabled</b>,
+     * <b>classpathEnabled</b> and <b>localEnabled</b>):
+     * <ul>
+     * <li><b>className</b> - java class name which implements
+     * <code>biz.gabrys.lesscss.compiler2.filesystem.FileSystem</code> (example
+     * <code>org.example.RsyncFileSystem</code>)</li>
+     * <li><b>cacheContent</b> - whether the files fetched by the file system should be cached on a local disk (default:
+     * <code>true</code>)</li>
+     * <li><b>parameters</b> - map with parameters which would be used to configure the file system (default:
+     * <code>{}</code>)</li>
+     * <li><b>dataProvider</b> - used to determine last modification date of the files (used only when
+     * <b>cacheOptions.mode</b> is not equal to <code>disabled</code>):
+     * <ul>
+     * <li><b>className</b> - java class name</li>
+     * <li><b>methodName</b> - method name</li>
+     * <li><b>staticMethod</b> - whether the method</li>
+     * </ul>
+     * </li>
+     * </ul>
+     * </li>
+     * </ul>
+     * <b>Notice</b>: files fetched by <b>classpathEnabled</b> and <b>localEnabled</b> are not cached in
+     * <a href="#workingDirectory">workingDirectory</a>.
+     * @since 2.0.0
+     */
+    @Parameter
+    protected FileSystems fileSystems = new FileSystems();
+
+    @Parameter
+    protected CacheOptions cacheOptions = new CacheOptions();
 
     /**
      * Sources encoding.<br>
@@ -267,9 +293,7 @@ public class CompileMojo extends AbstractMojo {
         final ParametersLogBuilder logger = new ParametersLogBuilder(getLog());
         logger.append("skip", skip);
         logger.append("verbose", verbose, new SimpleSanitizer(verbose, Boolean.TRUE));
-        // logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
-        // logger.append("alwaysOverwrite", alwaysOverwrite, new SimpleSanitizer(!(!watch && force && !alwaysOverwrite),
-        // Boolean.TRUE));
+        logger.append("force", force, new SimpleSanitizer(!watch || !force, Boolean.FALSE));
         logger.append("sourceDirectory", sourceDirectory);
         logger.append("outputDirectory", outputDirectory);
         logger.append("filesetPatternFormat", filesetPatternFormat);
@@ -300,30 +324,20 @@ public class CompileMojo extends AbstractMojo {
         logger.append("options.banner.text", options.banner.text);
         logger.append("options.globalVariables", options.globalVariables);
         logger.append("options.modifyVariables", options.modifyVariables);
-        logger.append("options.httpEnabled", options.httpEnabled);
-        logger.append("options.ftpEnabled", options.ftpEnabled);
-        logger.append("options.classpathEnabled", options.classpathEnabled);
-        logger.append("options.classpathLoadedDependenciesTypes", options.classpathLoadedDependenciesTypes);
+        logger.append("fileSystems.httpEnabled", fileSystems.httpEnabled);
+        logger.append("fileSystems.ftpEnabled", fileSystems.ftpEnabled);
+        logger.append("fileSystems.classpathEnabled", fileSystems.classpathEnabled);
+        logger.append("fileSystems.classpathLoadedDependenciesTypes", fileSystems.classpathDependenciesTypes);
+        logger.append("fileSystems.localEnabled", fileSystems.localEnabled);
+        logger.append("fileSystems.customs", fileSystems.customs, new FileSystemsCustomToStringConverter());
+        logger.append("cacheOptions.mode", cacheOptions.mode);
+        logger.append("cacheOptions.cacheAlive", cacheOptions.cacheAlive);
+        logger.append("cacheOptions.hashAlgorithm", cacheOptions.hashAlgorithm);
         logger.append("encoding", encoding);
         logger.append("outputFileFormat", outputFileFormat);
         logger.append("watch", watch);
-        logger.append("watchInterval", watchInterval, new ValueToStringConverter() {
-
-            private static final long MILLISECONDS_IN_SECOND = 1000L;
-
-            @Override
-            public String convert(final Object value) {
-                final Integer number = (Integer) value;
-                final StringBuilder text = new StringBuilder();
-                text.append(number);
-                if (number > 0) {
-                    text.append(" (");
-                    text.append(new TimeSpan(number * MILLISECONDS_IN_SECOND));
-                    text.append(')');
-                }
-                return text.toString();
-            }
-        }, new SimpleSanitizer(watchInterval > 0, Integer.valueOf(1)));
+        logger.append("watchInterval", watchInterval, new WatchIntervalToStringConverter(),
+                new SimpleSanitizer(watchInterval > 0, Integer.valueOf(1)));
         logger.append("workingDirectory", workingDirectory);
         logger.debug();
     }
@@ -357,7 +371,7 @@ public class CompileMojo extends AbstractMojo {
         }
         calculateParameters();
 
-        if (options.classpathEnabled) {
+        if (fileSystems.classpathEnabled) {
             addDependenciesToClasspath();
         }
 
@@ -373,7 +387,7 @@ public class CompileMojo extends AbstractMojo {
             getLog().info("Adding project dependencies to classpath...");
         }
         final ContextClassLoaderExtender extender = new ContextClassLoaderExtender(project, getLog());
-        final String[] types = options.classpathLoadedDependenciesTypes.split(",");
+        final String[] types = fileSystems.classpathDependenciesTypes.split(",");
         for (int i = 0; i < types.length; ++i) {
             types[i] = types[i].trim();
         }
@@ -405,6 +419,7 @@ public class CompileMojo extends AbstractMojo {
             getLog().warn("No sources to compile");
             return;
         }
+        cleanupCache(files);
         compileFiles(files);
     }
 
@@ -415,6 +430,15 @@ public class CompileMojo extends AbstractMojo {
             getLog().info("Scanning directory for sources...");
         }
         return scanner.getFiles(sourceDirectory, includes, excludes);
+    }
+
+    private void cleanupCache(final Collection<File> files) throws MojoFailureException {
+        final CacheCleaner cleaner = new CacheCleaner(workingDirectory, cacheOptions);
+        try {
+            cleaner.cleanupCache(files);
+        } catch (final IOException e) {
+            throw new MojoFailureException(e.getMessage(), e);
+        }
     }
 
     private void compileFiles(final Collection<File> files) throws MojoFailureException {
@@ -432,14 +456,17 @@ public class CompileMojo extends AbstractMojo {
     }
 
     private LessOptions createOptions() throws MojoFailureException {
+        final LessOptions lessOptions;
         try {
-            return options.toLessOptions(encoding);
-        } catch (final Exception e) {
+            lessOptions = options.toLessOptions(encoding);
+        } catch (final IOException e) {
             throw new MojoFailureException("Cannot prepare compiler configuration", e);
         }
+        // List<ExtendedFileSystemOption> systems = fileSystems.createFileSystems(!cacheOptions.isDisabled());
+        return lessOptions;
     }
 
-    private void compileFile(final LessCompiler compiler, final File source, final LessOptions options) throws MojoFailureException {
+    private void compileFile(final LessCompiler compiler, final File source, final LessOptions options) {
         Timer timer = null;
         if (verbose) {
             getLog().info("Processing Less source: " + source.getAbsolutePath());
@@ -447,6 +474,9 @@ public class CompileMojo extends AbstractMojo {
         }
         final File destination = new DestinationFileCreator(sourceDirectory, outputDirectory, outputFileFormat).create(source);
         compiler.compile(source, destination, options);
+        if (verbose) {
+            getLog().info("CSS code has been saved to " + destination.getAbsolutePath());
+        }
         if (timer != null) {
             getLog().info("Finished in " + timer.stop());
         }
