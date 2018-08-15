@@ -123,25 +123,6 @@ public class CompileMojo extends AbstractMojo {
     protected String[] excludes = new String[0];
 
     /**
-     * Defines whether the plugin should add comments with sources paths at the beginning and end of each source.<br>
-     * <b>Notice</b>: always false when <a href="#compilerType">compiler type</a> is equal to <b>local</b> or
-     * <a href="#compress">compress</a> is equal to true.<br>
-     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
-     * @since 1.0
-     */
-    // @Parameter(property = "lesscss.addCommentsWithPaths", defaultValue = "false")
-    // protected boolean addCommentsWithPaths;
-
-    /**
-     * Restricted class name prefix used to create comments with sources paths.<br>
-     * <b>Notice</b>: you must clear the <a href="#workingDirectory">working directory</a> if you change this parameter.
-     * @since 1.0
-     */
-    // @Parameter(property = "lesscss.addCommentsWithPathsClassPrefix", defaultValue =
-    // "gabrys-biz-comment-with-path-marker-class")
-    // protected String addCommentsWithPathsClassPrefix;
-
-    /**
      * Defines <a href="http://lesscss.org/usage/index.html#less-options">Less compiler options</a> responsible for
      * controlling the compilation process.<br>
      * Base options:
@@ -419,7 +400,6 @@ public class CompileMojo extends AbstractMojo {
             getLog().warn("No sources to compile");
             return;
         }
-        cleanupCache(files);
         compileFiles(files);
     }
 
@@ -430,15 +410,6 @@ public class CompileMojo extends AbstractMojo {
             getLog().info("Scanning directory for sources...");
         }
         return scanner.getFiles(sourceDirectory, includes, excludes);
-    }
-
-    private void cleanupCache(final Collection<File> files) throws MojoFailureException {
-        final CacheCleaner cleaner = new CacheCleaner(workingDirectory, cacheOptions);
-        try {
-            cleaner.cleanupCache(files);
-        } catch (final IOException e) {
-            throw new MojoFailureException(e.getMessage(), e);
-        }
     }
 
     private void compileFiles(final Collection<File> files) throws MojoFailureException {

@@ -12,19 +12,10 @@
  */
 package biz.gabrys.maven.plugins.lesscss;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedCachingRedirectsFtpFileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedCachingRedirectsHttpFileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedClassPathFileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedFtpFileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedHttpFileSystem;
-import biz.gabrys.maven.plugins.lesscss.cache.ExtendedLocalFileSystem;
 
 public class FileSystems {
 
@@ -33,35 +24,14 @@ public class FileSystems {
     protected boolean classpathEnabled = true;
     protected String classpathDependenciesTypes = "jar,war";
     protected boolean localEnabled = true;
-
     protected CustomFileSystem[] customs = new CustomFileSystem[0];
-
-    public List<CustomFileSystem> createFileSystems(final boolean cachingRedirectsEnabled) {
-        final List<CustomFileSystem> options = new ArrayList<CustomFileSystem>();
-        options.addAll(Arrays.asList(customs));
-        if (httpEnabled) {
-            options.add(new CustomFileSystem(
-                    cachingRedirectsEnabled ? ExtendedCachingRedirectsHttpFileSystem.class : ExtendedHttpFileSystem.class, true));
-        }
-        if (ftpEnabled) {
-            options.add(new CustomFileSystem(
-                    cachingRedirectsEnabled ? ExtendedCachingRedirectsFtpFileSystem.class : ExtendedFtpFileSystem.class, true));
-        }
-        if (classpathEnabled) {
-            options.add(new CustomFileSystem(ExtendedClassPathFileSystem.class, false));
-        }
-        if (localEnabled) {
-            options.add(new CustomFileSystem(ExtendedLocalFileSystem.class, false));
-        }
-        return options;
-    }
 
     public static class CustomFileSystem {
 
         protected String className;
         protected Boolean cacheContent;
         protected Parameter[] parameters = new Parameter[0];
-        protected DateProvider dateProvider;
+        protected DateProvider dateProvider = new DateProvider();
 
         public CustomFileSystem() {
             // do nothing
@@ -93,7 +63,7 @@ public class FileSystems {
         }
 
         public DateProvider getDateProvider() {
-            return dateProvider;
+            return dateProvider.isSet() ? dateProvider : null;
         }
 
         public static class Parameter {
@@ -107,6 +77,10 @@ public class FileSystems {
             protected String className;
             protected String methodName;
             protected Boolean staticMethod;
+
+            public boolean isSet() {
+                return className != null || methodName != null || staticMethod != null;
+            }
 
             public String getClassName() {
                 return className;

@@ -15,12 +15,6 @@ package biz.gabrys.maven.plugins.lesscss;
 public class CacheOptions {
 
     protected String mode = "full";
-
     protected int cacheAlive = 86400;
-
     protected String hashAlgorithm = "md5";
-
-    public boolean isDisabled() {
-        return "off".equals(mode);
-    }
 }

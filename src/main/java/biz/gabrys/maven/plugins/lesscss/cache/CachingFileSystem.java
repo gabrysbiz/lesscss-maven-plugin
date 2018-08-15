@@ -22,7 +22,7 @@ import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
 
 public class CachingFileSystem implements FileSystem {
 
-    public static final String WORKING_DIRECTORY_PARAM = "working-directory";
+    public static final String CACHE_DIRECTORY_PARAM = "cache-directory";
     public static final String BASE_FILE_PARAM = "base-file";
     public static final String HASH_ALGORITHM_PARAM = "hash-algorithm";
     public static final String FILE_SYSTEM_CLASS_PARAM = "file-system-class";
@@ -31,17 +31,15 @@ public class CachingFileSystem implements FileSystem {
     public static final String PROXY_PREFIX = "proxy.";
     private static final int PROXY_PREFIX_LENGTH = PROXY_PREFIX.length();
 
-    private String baseFileId;
-    private FileSystem internalFileSystem;
+    private String baseFile;
+    private FileSystem fileSystem;
     private boolean cacheContent;
-
-    private MetadataStorage metadata;
+    private CacheStorage cacheStorage;
 
     @Override
     public void configure(final Map<String, String> parameters) throws Exception {
 
         String workingDirectory = null;
-        String baseFile = null;
         String hashAlgorithm = null;
         String className = null;
         final Map<String, String> internalParameters = new LinkedHashMap<String, String>();
@@ -49,7 +47,7 @@ public class CachingFileSystem implements FileSystem {
         for (final Entry<String, String> entry : parameters.entrySet()) {
             final String name = entry.getKey();
             final String value = entry.getValue();
-            if (WORKING_DIRECTORY_PARAM.equals(name)) {
+            if (CACHE_DIRECTORY_PARAM.equals(name)) {
                 workingDirectory = value;
             } else if (BASE_FILE_PARAM.equals(name)) {
                 baseFile = value;
@@ -64,52 +62,60 @@ public class CachingFileSystem implements FileSystem {
             }
         }
 
-        metadata = new MetadataStorage(workingDirectory, hashAlgorithm);
-        baseFileId = metadata.createId(baseFile);
-        internalFileSystem = (FileSystem) Class.forName(className).getConstructor().newInstance();
-        internalFileSystem.configure(internalParameters);
+        cacheStorage = new CacheStorage(workingDirectory, hashAlgorithm);
+        fileSystem = (FileSystem) Class.forName(className).getConstructor().newInstance();
+        fileSystem.configure(internalParameters);
     }
 
     @Override
     public boolean isSupported(final String path) {
-        return internalFileSystem.isSupported(path);
+        return fileSystem.isSupported(path);
     }
 
     @Override
     public String normalize(final String path) throws Exception {
-        return internalFileSystem.normalize(path);
+        return fileSystem.normalize(path);
     }
 
     @Override
     public String expandRedirection(final String path) throws Exception {
-        return internalFileSystem.expandRedirection(path);
+        if (cacheStorage.hasRedirection(path)) {
+            return cacheStorage.getRedirection(path);
+        }
+        final String result = fileSystem.expandRedirection(path);
+        cacheStorage.saveRedirection(path, result);
+        return result;
     }
 
     @Override
     public boolean exists(final String path) throws Exception {
-        return internalFileSystem.exists(path);
+        if (cacheStorage.hasExistent(path)) {
+            return cacheStorage.getExistent(path);
+        }
+        final boolean result = fileSystem.exists(path);
+        cacheStorage.saveExistent(path, result);
+        return result;
     }
 
     @Override
     public FileData fetch(final String path) throws Exception {
-        final Collection<String> dependencies = metadata.readDependencies(baseFileId);
+        final Collection<String> dependencies = cacheStorage.readDependencies(baseFile);
         if (!dependencies.contains(path)) {
             dependencies.add(path);
-            metadata.saveDependencies(baseFileId, dependencies);
+            cacheStorage.saveDependencies(baseFile, dependencies);
         }
 
         if (cacheContent) {
-            final String fileId = metadata.createId(path);
-            final byte[] content = metadata.readContent(fileId);
+            final byte[] content = cacheStorage.readContent(path);
             if (content != null) {
-                final String encoding = metadata.readEncoding(fileId);
+                final String encoding = cacheStorage.readEncoding(path);
                 return new FileData(content, encoding);
             }
-            final FileData fileData = internalFileSystem.fetch(path);
-            metadata.saveContent(fileId, fileData.getContent());
-            metadata.saveEncoding(fileId, fileData.getEncoding());
+            final FileData fileData = fileSystem.fetch(path);
+            cacheStorage.saveContent(path, fileData.getContent());
+            cacheStorage.saveEncoding(path, fileData.getEncoding());
             return fileData;
         }
-        return internalFileSystem.fetch(path);
+        return fileSystem.fetch(path);
     }
 }

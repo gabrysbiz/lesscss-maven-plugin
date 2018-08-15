@@ -17,13 +17,14 @@ import java.util.Map.Entry;
 
 import biz.gabrys.lesscss.compiler2.FileSystemOption;
 import biz.gabrys.lesscss.compiler2.FileSystemOptionBuilder;
+import biz.gabrys.maven.plugins.lesscss.config.PluginFileSystemOption;
 
 public class CachingFileSystemOptionBuilder {
 
     private final FileSystemOptionBuilder builder = new FileSystemOptionBuilder();
 
-    public CachingFileSystemOptionBuilder workingDirectory(final File directory) {
-        builder.appendParameter(CachingFileSystem.WORKING_DIRECTORY_PARAM, directory.getAbsolutePath());
+    public CachingFileSystemOptionBuilder cacheDirectory(final File directory) {
+        builder.appendParameter(CachingFileSystem.CACHE_DIRECTORY_PARAM, directory.getAbsolutePath());
         return this;
     }
 
@@ -37,16 +38,12 @@ public class CachingFileSystemOptionBuilder {
         return this;
     }
 
-    public CachingFileSystemOptionBuilder fileSystemOption(final FileSystemOption option) {
+    public CachingFileSystemOptionBuilder fileSystemOption(final PluginFileSystemOption option) {
+        builder.appendParameter(CachingFileSystem.CACHE_CONTENT_PARAM, Boolean.toString(option.isCacheContent()));
         builder.appendParameter(CachingFileSystem.FILE_SYSTEM_CLASS_PARAM, option.getClassName());
         for (final Entry<String, String> entry : option.getParameters().entrySet()) {
             builder.appendParameter(CachingFileSystem.PROXY_PREFIX + entry.getKey(), entry.getValue());
         }
-        return this;
-    }
-
-    public CachingFileSystemOptionBuilder cacheContent(final boolean cacheContent) {
-        builder.appendParameter(CachingFileSystem.CACHE_CONTENT_PARAM, Boolean.toString(cacheContent));
         return this;
     }
 

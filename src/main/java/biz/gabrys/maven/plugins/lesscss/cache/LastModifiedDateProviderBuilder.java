@@ -15,42 +15,51 @@ package biz.gabrys.maven.plugins.lesscss.cache;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
-import java.util.Map;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
+import biz.gabrys.maven.plugins.lesscss.config.DateProviderConfig;
+import biz.gabrys.maven.plugins.lesscss.config.PluginFileSystemOption;
 
 public class LastModifiedDateProviderBuilder {
 
-    private String fileSystemClassName;
-    private Map<String, String> fileSystemParameters;
-    private String dataProviderClassName;
-    private String dataProviderMethodName;
-    private boolean dataProviderStaticMethod;
-
-    public LastModifiedDateProviderBuilder fileSystem(final String className, final Map<String, String> parameters) {
-        fileSystemClassName = className;
-        fileSystemParameters = parameters;
-        return this;
-    }
-
-    public LastModifiedDateProviderBuilder dataProvider(final String className, final String methodName, final boolean staticMethod) {
-        dataProviderClassName = className;
-        dataProviderMethodName = methodName;
-        dataProviderStaticMethod = staticMethod;
-        return this;
-    }
-
-    public LastModifiedDateProvider build() throws Exception {
-        final FileSystem fileSystem = (FileSystem) Class.forName(fileSystemClassName).getConstructor().newInstance();
-        fileSystem.configure(fileSystemParameters);
+    public LastModifiedDateProvider create(final PluginFileSystemOption option) throws Exception {
+        final FileSystem fileSystem = (FileSystem) Class.forName(option.getClassName()).getConstructor().newInstance();
+        fileSystem.configure(option.getParameters());
         if (fileSystem instanceof LastModifiedDateProvider) {
             return (LastModifiedDateProvider) fileSystem;
         }
 
-        final Class<?> clazz = Class.forName(dataProviderClassName);
-        final Object instance = dataProviderStaticMethod ? null : clazz.getConstructor().newInstance();
-        final Method method = clazz.getMethod(dataProviderMethodName, String.class, FileSystem.class);
+        final DateProviderConfig dateProviderConfig = option.getDateProviderConfig();
+        if (dateProviderConfig.getClassName() == null || option.getClassName().equals(dateProviderConfig.getClassName())) {
+            return createFromFileSystem(fileSystem, dateProviderConfig);
+        }
+        return createFromDateProviderConfig(fileSystem, dateProviderConfig);
+    }
 
+    protected LastModifiedDateProvider createFromFileSystem(final FileSystem fileSystem, final DateProviderConfig dateProviderConfig)
+            throws NoSuchMethodException {
+        final Method method = fileSystem.getClass().getMethod(dateProviderConfig.getMethodName(), String.class);
+        final Object instance = dateProviderConfig.isStaticMethod() ? null : fileSystem;
+        return new LastModifiedDateProvider() {
+
+            @Override
+            public boolean isSupported(final String path) {
+                return fileSystem.isSupported(path);
+            }
+
+            @Override
+            public Date getLastModified(final String path) throws Exception {
+                return (Date) method.invoke(instance, path);
+            }
+        };
+    }
+
+    protected LastModifiedDateProvider createFromDateProviderConfig(final FileSystem fileSystem,
+            final DateProviderConfig dateProviderConfig) throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        final Class<?> dateProviderClass = Class.forName(dateProviderConfig.getClassName());
+        final Object instance = dateProviderConfig.isStaticMethod() ? null : dateProviderClass.getConstructor().newInstance();
+        final Method method = dateProviderClass.getMethod(dateProviderConfig.getMethodName(), String.class, FileSystem.class);
         return new LastModifiedDateProvider() {
 
             @Override

@@ -27,51 +27,51 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
 
     @Override
     public String convert(final Object value) {
-        final CustomFileSystem[] options = (CustomFileSystem[]) value;
+        final CustomFileSystem[] fileSystems = (CustomFileSystem[]) value;
         final StringBuilder text = new StringBuilder();
         text.append('[');
-        for (int i = 0; i < options.length; ++i) {
-            text.append("{\n");
-            appendOption(text, options[i]);
-            text.append('\n');
-            text.append(PADDING_1);
-            text.append('}');
-            if (i != options.length - 1) {
-                text.append(", ");
-            }
-        }
+        appendFileSystems(text, fileSystems);
         text.append(']');
         return text.toString();
     }
 
-    private void appendOption(final StringBuilder text, final CustomFileSystem option) {
-        appendClassName(text, option.getClassName());
-        text.append('\n');
-        appendCacheContent(text, option);
-        text.append('\n');
-        appendParameters(text, option.getParameters());
-        text.append('\n');
-        appendDateProvider(text, option.getDateProvider());
+    protected void appendFileSystems(final StringBuilder text, final CustomFileSystem[] fileSystems) {
+        for (int i = 0; i < fileSystems.length; ++i) {
+            text.append("{\n");
+            appendFileSystem(text, fileSystems[i]);
+            text.append('\n');
+            text.append(PADDING_1);
+            text.append('}');
+            if (i != fileSystems.length - 1) {
+                text.append(", ");
+            }
+        }
     }
 
-    private void appendClassName(final StringBuilder text, final String className) {
+    protected void appendFileSystem(final StringBuilder text, final CustomFileSystem fileSystem) {
+        appendClassName(text, fileSystem.getClassName());
+        text.append('\n');
+        appendCacheContent(text, fileSystem);
+        text.append('\n');
+        appendParameters(text, fileSystem.getParameters());
+        text.append('\n');
+        appendDateProvider(text, fileSystem);
+    }
+
+    protected void appendClassName(final StringBuilder text, final String className) {
         text.append(PADDING_2);
         text.append("className: ");
         text.append(className);
     }
 
-    private void appendCacheContent(final StringBuilder text, final CustomFileSystem option) {
+    protected void appendCacheContent(final StringBuilder text, final CustomFileSystem fileSystem) {
         text.append(PADDING_2);
         text.append("cacheContent: ");
-        text.append(option.getCacheContent());
-        if (option.getCacheContent() == null) {
-            text.append(" (calculated: ");
-            text.append(option.isCacheContent());
-            text.append(')');
-        }
+        text.append(fileSystem.getCacheContent());
+        appendCalculated(text, fileSystem.getCacheContent(), fileSystem.isCacheContent());
     }
 
-    private void appendParameters(final StringBuilder text, final Map<String, String> parameters) {
+    protected void appendParameters(final StringBuilder text, final Map<String, String> parameters) {
         text.append(PADDING_2);
         text.append("parameters: ");
         if (parameters.isEmpty()) {
@@ -90,9 +90,10 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
         }
     }
 
-    private void appendDateProvider(final StringBuilder text, final DateProvider dateProvider) {
+    protected void appendDateProvider(final StringBuilder text, final CustomFileSystem fileSystem) {
         text.append(PADDING_2);
         text.append("dateProvider: ");
+        final DateProvider dateProvider = fileSystem.getDateProvider();
         if (dateProvider == null) {
             text.append("null");
         } else {
@@ -100,6 +101,7 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
             text.append(PADDING_3);
             text.append("className: ");
             text.append(dateProvider.getClassName());
+            appendCalculated(text, dateProvider.getClassName(), fileSystem.getClassName());
             text.append('\n');
             text.append(PADDING_3);
             text.append("methodName: ");
@@ -108,14 +110,18 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
             text.append(PADDING_3);
             text.append("staticMethod: ");
             text.append(dateProvider.getStaticMethod());
-            if (dateProvider.getStaticMethod() == null) {
-                text.append(" (calculated: ");
-                text.append(dateProvider.isStaticMethod());
-                text.append(')');
-            }
+            appendCalculated(text, dateProvider.getStaticMethod(), dateProvider.isStaticMethod());
             text.append('\n');
             text.append(PADDING_2);
             text.append('}');
+        }
+    }
+
+    private void appendCalculated(final StringBuilder text, final Object value, final Object calculatedValue) {
+        if (value == null) {
+            text.append(" (calculated: ");
+            text.append(calculatedValue);
+            text.append(')');
         }
     }
 }
