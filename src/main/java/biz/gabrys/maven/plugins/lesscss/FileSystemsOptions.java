@@ -13,22 +13,73 @@
 package biz.gabrys.maven.plugins.lesscss;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import biz.gabrys.lesscss.compiler2.FileSystemOption;
+import biz.gabrys.lesscss.compiler2.FileSystemOptionBuilder;
+import biz.gabrys.lesscss.compiler2.FileSystemOptionsBuilder;
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
 
-public class FileSystems {
+public class FileSystemsOptions {
 
-    protected boolean httpEnabled = true;
-    protected boolean ftpEnabled = true;
     protected boolean classpathEnabled = true;
     protected String classpathDependenciesTypes = "jar,war";
+    protected boolean httpEnabled = true;
+    protected boolean ftpEnabled = true;
     protected boolean localEnabled = true;
     protected CustomFileSystem[] customs = new CustomFileSystem[0];
+
+    public boolean isClasspathEnabled() {
+        return classpathEnabled;
+    }
+
+    public boolean isHttpEnabled() {
+        return httpEnabled;
+    }
+
+    public boolean isFtpEnabled() {
+        return ftpEnabled;
+    }
+
+    public boolean isLocalEnabled() {
+        return localEnabled;
+    }
+
+    public CustomFileSystem[] getCustoms() {
+        return customs;
+    }
+
+    public List<FileSystemOption> toFileSystemOptions() {
+        final FileSystemOptionsBuilder builder = new FileSystemOptionsBuilder();
+
+        for (final CustomFileSystem customfileSystem : customs) {
+            builder.appendCustom(new FileSystemOptionBuilder()//
+                    .withClass(customfileSystem.getClassName())//
+                    .appendParameters(customfileSystem.getParameters())//
+                    .build());
+        }
+
+        if (classpathEnabled) {
+            builder.appendClassPath();
+        }
+        if (httpEnabled) {
+            builder.appendHttp();
+        }
+        if (ftpEnabled) {
+            builder.appendFtp();
+        }
+        if (localEnabled) {
+            builder.appendLocal();
+        }
+
+        return builder.build();
+    }
 
     public static class CustomFileSystem {
 
         protected String className;
+        protected Boolean cacheRedirects;
         protected Boolean cacheContent;
         protected Parameter[] parameters = new Parameter[0];
         protected DateProvider dateProvider = new DateProvider();
@@ -52,6 +103,14 @@ public class FileSystems {
 
         public boolean isCacheContent() {
             return cacheContent == null || cacheContent.booleanValue();
+        }
+
+        public Boolean getCacheRedirects() {
+            return cacheRedirects;
+        }
+
+        public boolean isCacheRedirects() {
+            return cacheRedirects == null || cacheRedirects.booleanValue();
         }
 
         public Map<String, String> getParameters() {

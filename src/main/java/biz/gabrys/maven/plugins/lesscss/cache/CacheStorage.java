@@ -44,11 +44,11 @@ public class CacheStorage {
     }
 
     public boolean hasRedirection(final String path) {
-        return createFile(path, REDIRECTION_MARKER_FILE_NAME).exists();
+        return createAbstractFile(path, REDIRECTION_MARKER_FILE_NAME).exists();
     }
 
     public String getRedirection(final String path) throws IOException {
-        final File file = createFile(path, REDIRECTION_FILE_NAME);
+        final File file = createAbstractFile(path, REDIRECTION_FILE_NAME);
         if (file.exists()) {
             return FileUtils.readFileToString(file, ENCODING);
         }
@@ -56,28 +56,31 @@ public class CacheStorage {
     }
 
     public void saveRedirection(final String path, final String redirect) throws IOException {
-        createEmptyFile(createFile(path, REDIRECTION_MARKER_FILE_NAME));
+        createEmptyFile(createAbstractFile(path, REDIRECTION_MARKER_FILE_NAME));
         if (!path.equals(redirect)) {
-            FileUtils.writeStringToFile(createFile(path, REDIRECTION_FILE_NAME), redirect, ENCODING);
+            FileUtils.writeStringToFile(createAbstractFile(path, REDIRECTION_FILE_NAME), redirect, ENCODING);
         }
     }
 
     public boolean hasExistent(final String path) {
-        return createFile(path, CONTENT_FILE_NAME).exists() || createFile(path, NON_EXISTENCE_MARKER_FILE_NAME).exists();
+        return createAbstractFile(path, CONTENT_FILE_NAME).exists() || createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME).exists();
     }
 
-    public boolean getExistent(final String path) {
-        return !createFile(path, NON_EXISTENCE_MARKER_FILE_NAME).exists();
+    public boolean isExistent(final String path) {
+        return !createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME).exists();
     }
 
     public void saveExistent(final String path, final boolean existent) throws IOException {
-        if (!existent) {
-            createEmptyFile(createFile(path, NON_EXISTENCE_MARKER_FILE_NAME));
+        final File file = createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME);
+        if (existent) {
+            deleteIfExist(file);
+        } else {
+            createEmptyFile(file);
         }
     }
 
     public Collection<String> readDependencies(final String path) throws IOException {
-        final File file = createFile(path, DEPENDENCIES_FILE_NAME);
+        final File file = createAbstractFile(path, DEPENDENCIES_FILE_NAME);
         if (file.exists()) {
             return new HashSet<String>(FileUtils.readLines(file, ENCODING));
         }
@@ -85,11 +88,11 @@ public class CacheStorage {
     }
 
     public void saveDependencies(final String path, final Collection<String> dependencies) throws IOException {
-        FileUtils.writeLines(createFile(path, DEPENDENCIES_FILE_NAME), ENCODING, dependencies);
+        FileUtils.writeLines(createAbstractFile(path, DEPENDENCIES_FILE_NAME), ENCODING, dependencies);
     }
 
     public byte[] readContent(final String path) throws IOException {
-        final File file = createFile(path, CONTENT_FILE_NAME);
+        final File file = createAbstractFile(path, CONTENT_FILE_NAME);
         if (file.exists()) {
             return FileUtils.readFileToByteArray(file);
         }
@@ -97,11 +100,11 @@ public class CacheStorage {
     }
 
     public void saveContent(final String path, final byte[] data) throws IOException {
-        FileUtils.writeByteArrayToFile(createFile(path, CONTENT_FILE_NAME), data);
+        FileUtils.writeByteArrayToFile(createAbstractFile(path, CONTENT_FILE_NAME), data);
     }
 
     public String readEncoding(final String path) throws IOException {
-        final File file = createFile(path, ENCODING_FILE_NAME);
+        final File file = createAbstractFile(path, ENCODING_FILE_NAME);
         if (file.exists()) {
             return FileUtils.readFileToString(file, ENCODING);
         }
@@ -109,7 +112,7 @@ public class CacheStorage {
     }
 
     public void saveEncoding(final String path, final String encoding) throws IOException {
-        final File file = createFile(path, ENCODING_FILE_NAME);
+        final File file = createAbstractFile(path, ENCODING_FILE_NAME);
         if (encoding == null) {
             deleteIfExist(file);
         } else {
@@ -143,7 +146,7 @@ public class CacheStorage {
         }
     }
 
-    private File createFile(final String path, final String filename) {
+    private File createAbstractFile(final String path, final String filename) {
         final StringBuilder file = new StringBuilder();
         file.append(cacheDirectory);
         file.append(File.separator);

@@ -17,7 +17,7 @@ import java.util.Map.Entry;
 
 import biz.gabrys.lesscss.compiler2.FileSystemOption;
 import biz.gabrys.lesscss.compiler2.FileSystemOptionBuilder;
-import biz.gabrys.maven.plugins.lesscss.config.PluginFileSystemOption;
+import biz.gabrys.maven.plugins.lesscss.config.ExtendedFileSystemOption;
 
 public class CachingFileSystemOptionBuilder {
 
@@ -38,9 +38,10 @@ public class CachingFileSystemOptionBuilder {
         return this;
     }
 
-    public CachingFileSystemOptionBuilder fileSystemOption(final PluginFileSystemOption option) {
+    public CachingFileSystemOptionBuilder fileSystemOption(final ExtendedFileSystemOption option) {
         builder.appendParameter(CachingFileSystem.CACHE_CONTENT_PARAM, Boolean.toString(option.isCacheContent()));
-        builder.appendParameter(CachingFileSystem.FILE_SYSTEM_CLASS_PARAM, option.getClassName());
+        builder.appendParameter(CachingFileSystem.CACHE_REDIRECTS_PARAM, Boolean.toString(option.isCacheRedirects()));
+        builder.appendParameter(CachingFileSystem.FILE_SYSTEM_PARAM, option.getClassName());
         for (final Entry<String, String> entry : option.getParameters().entrySet()) {
             builder.appendParameter(CachingFileSystem.PROXY_PREFIX + entry.getKey(), entry.getValue());
         }

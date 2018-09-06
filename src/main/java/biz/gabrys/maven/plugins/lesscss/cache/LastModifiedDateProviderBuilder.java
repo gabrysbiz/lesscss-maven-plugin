@@ -18,11 +18,11 @@ import java.util.Date;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
 import biz.gabrys.maven.plugins.lesscss.config.DateProviderConfig;
-import biz.gabrys.maven.plugins.lesscss.config.PluginFileSystemOption;
+import biz.gabrys.maven.plugins.lesscss.config.ExtendedFileSystemOption;
 
 public class LastModifiedDateProviderBuilder {
 
-    public LastModifiedDateProvider create(final PluginFileSystemOption option) throws Exception {
+    public LastModifiedDateProvider create(final ExtendedFileSystemOption option) throws Exception {
         final FileSystem fileSystem = (FileSystem) Class.forName(option.getClassName()).getConstructor().newInstance();
         fileSystem.configure(option.getParameters());
         if (fileSystem instanceof LastModifiedDateProvider) {

@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import biz.gabrys.maven.plugin.util.parameter.converter.ValueToStringConverter;
-import biz.gabrys.maven.plugins.lesscss.FileSystems.CustomFileSystem;
-import biz.gabrys.maven.plugins.lesscss.FileSystems.CustomFileSystem.DateProvider;
+import biz.gabrys.maven.plugins.lesscss.FileSystemsOptions.CustomFileSystem;
+import biz.gabrys.maven.plugins.lesscss.FileSystemsOptions.CustomFileSystem.DateProvider;
 
 public class FileSystemsCustomToStringConverter implements ValueToStringConverter {
 
@@ -53,6 +53,8 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
         text.append('\n');
         appendCacheContent(text, fileSystem);
         text.append('\n');
+        appendCacheRedirects(text, fileSystem);
+        text.append('\n');
         appendParameters(text, fileSystem.getParameters());
         text.append('\n');
         appendDateProvider(text, fileSystem);
@@ -69,6 +71,13 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
         text.append("cacheContent: ");
         text.append(fileSystem.getCacheContent());
         appendCalculated(text, fileSystem.getCacheContent(), fileSystem.isCacheContent());
+    }
+
+    protected void appendCacheRedirects(final StringBuilder text, final CustomFileSystem fileSystem) {
+        text.append(PADDING_2);
+        text.append("cacheRedirects: ");
+        text.append(fileSystem.getCacheRedirects());
+        appendCalculated(text, fileSystem.getCacheRedirects(), fileSystem.isCacheRedirects());
     }
 
     protected void appendParameters(final StringBuilder text, final Map<String, String> parameters) {
@@ -117,7 +126,7 @@ public class FileSystemsCustomToStringConverter implements ValueToStringConverte
         }
     }
 
-    private void appendCalculated(final StringBuilder text, final Object value, final Object calculatedValue) {
+    private static void appendCalculated(final StringBuilder text, final Object value, final Object calculatedValue) {
         if (value == null) {
             text.append(" (calculated: ");
             text.append(calculatedValue);

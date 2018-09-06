@@ -20,8 +20,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
-import biz.gabrys.maven.plugins.lesscss.FileSystems.CustomFileSystem;
-import biz.gabrys.maven.plugins.lesscss.FileSystems.CustomFileSystem.DateProvider;
+import biz.gabrys.maven.plugins.lesscss.FileSystemsOptions.CustomFileSystem;
+import biz.gabrys.maven.plugins.lesscss.FileSystemsOptions.CustomFileSystem.DateProvider;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FileSystemsCustomToStringConverterTest {
@@ -68,12 +68,13 @@ public class FileSystemsCustomToStringConverterTest {
         final CustomFileSystem fileSystem = mock(CustomFileSystem.class);
         doAnswer(new AppendTextAnswer("class-name")).when(converter).appendClassName(text, null);
         doAnswer(new AppendTextAnswer("cache-content")).when(converter).appendCacheContent(text, fileSystem);
+        doAnswer(new AppendTextAnswer("cache-redirection")).when(converter).appendCacheRedirects(text, fileSystem);
         doAnswer(new AppendTextAnswer("parameters")).when(converter).appendParameters(eq(text), anyMapOf(String.class, String.class));
         doAnswer(new AppendTextAnswer("data-provider")).when(converter).appendDateProvider(text, fileSystem);
 
         converter.appendFileSystem(text, fileSystem);
 
-        assertThat(text.toString()).isEqualTo("class-name\ncache-content\nparameters\ndata-provider");
+        assertThat(text.toString()).isEqualTo("class-name\ncache-content\ncache-redirection\nparameters\ndata-provider");
     }
 
     @Test
@@ -106,6 +107,29 @@ public class FileSystemsCustomToStringConverterTest {
         converter.appendCacheContent(text, fileSystem);
 
         assertThat(text.toString()).isEqualTo("                cacheContent: true");
+    }
+
+    @Test
+    public void appendCacheRedirects_cacheRedirectsIsNull_appendsCalculated() {
+        final StringBuilder text = new StringBuilder();
+        final CustomFileSystem fileSystem = mock(CustomFileSystem.class);
+        when(fileSystem.getCacheRedirects()).thenReturn(null);
+        when(fileSystem.isCacheRedirects()).thenReturn(Boolean.TRUE);
+
+        converter.appendCacheRedirects(text, fileSystem);
+
+        assertThat(text.toString()).isEqualTo("                cacheRedirects: null (calculated: true)");
+    }
+
+    @Test
+    public void appendCacheRedirects_cacheRedirectsIsNotNull_doesNotAppendCaclulated() {
+        final StringBuilder text = new StringBuilder();
+        final CustomFileSystem fileSystem = mock(CustomFileSystem.class);
+        when(fileSystem.getCacheRedirects()).thenReturn(Boolean.TRUE);
+
+        converter.appendCacheRedirects(text, fileSystem);
+
+        assertThat(text.toString()).isEqualTo("                cacheRedirects: true");
     }
 
     @Test

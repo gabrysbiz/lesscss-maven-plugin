@@ -15,35 +15,41 @@ package biz.gabrys.maven.plugins.lesscss.config;
 import java.util.Collections;
 import java.util.Map;
 
-public class PluginFileSystemOptionBuilder {
+public class ExtendedFileSystemOptionBuilder {
 
     private String className;
     private Map<String, String> parameters;
     private boolean cacheContent;
+    private boolean cacheRedirects;
     private DateProviderConfig dateProviderConfig;
 
-    public PluginFileSystemOptionBuilder className(final String className) {
+    public ExtendedFileSystemOptionBuilder className(final String className) {
         this.className = className;
         return this;
     }
 
-    public PluginFileSystemOptionBuilder parameters(final Map<String, String> parameters) {
+    public ExtendedFileSystemOptionBuilder parameters(final Map<String, String> parameters) {
         this.parameters = parameters;
         return this;
     }
 
-    public PluginFileSystemOptionBuilder cacheContent(final boolean cacheContent) {
+    public ExtendedFileSystemOptionBuilder cacheContent(final boolean cacheContent) {
         this.cacheContent = cacheContent;
         return this;
     }
 
-    public PluginFileSystemOptionBuilder dateProvider(final String className, final String methodName, final boolean staticMethod) {
+    public ExtendedFileSystemOptionBuilder cacheRedirects(final boolean cacheRedirects) {
+        this.cacheRedirects = cacheRedirects;
+        return this;
+    }
+
+    public ExtendedFileSystemOptionBuilder dateProvider(final String className, final String methodName, final boolean staticMethod) {
         dateProviderConfig = new DateProviderConfig(className, methodName, staticMethod);
         return this;
     }
 
-    public PluginFileSystemOption build() {
+    public ExtendedFileSystemOption build() {
         final Map<String, String> params = parameters != null ? parameters : Collections.<String, String>emptyMap();
-        return new PluginFileSystemOption(className, params, cacheContent, dateProviderConfig);
+        return new ExtendedFileSystemOption(className, params, cacheContent, cacheRedirects, dateProviderConfig);
     }
 }

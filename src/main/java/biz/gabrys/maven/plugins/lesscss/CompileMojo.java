@@ -184,14 +184,14 @@ public class CompileMojo extends AbstractMojo {
     /**
      * Defines file systems used to read files content.
      * <ul>
-     * <li><b>httpEnabled</b> - whether the plugin allows using <code>http://</code> and <code>https://</code> protocols
-     * (default <code>true</code>)</li>
-     * <li><b>ftpEnabled</b> - whether the plugin allows using <code>ftp://</code> protocol (default
-     * <code>true</code>)</li>
      * <li><b>classpathEnabled</b> - whether the plugin allows using <code>classpath://</code> protocol (default
      * <code>true</code>)</li>
      * <li><b>classpathDependenciesTypes</b> - a comma separated types list of dependencies whose will be added to the
      * plugin class path (default: <code>jar,war</code>)</li>
+     * <li><b>httpEnabled</b> - whether the plugin allows using <code>http://</code> and <code>https://</code> protocols
+     * (default <code>true</code>)</li>
+     * <li><b>ftpEnabled</b> - whether the plugin allows using <code>ftp://</code> protocol (default
+     * <code>true</code>)</li>
      * <li><b>localEnabled</b> - whether the plugin allows using files stored on a local hard drive (default
      * <code>true</code>)</li>
      * <li><b>customs</b> - custom file systems (inserted before <b>httpEnabled</b>, <b>ftpEnabled</b>,
@@ -200,7 +200,9 @@ public class CompileMojo extends AbstractMojo {
      * <li><b>className</b> - java class name which implements
      * <code>biz.gabrys.lesscss.compiler2.filesystem.FileSystem</code> (example
      * <code>org.example.RsyncFileSystem</code>)</li>
-     * <li><b>cacheContent</b> - whether the files fetched by the file system should be cached on a local disk (default:
+     * <li><b>cacheRedirects</b> - whether the expanded redirections by the file system should be cached (default:
+     * <code>true</code>)</li>
+     * <li><b>cacheContent</b> - whether the files fetched by the file system should be cached (default:
      * <code>true</code>)</li>
      * <li><b>parameters</b> - map with parameters which would be used to configure the file system (default:
      * <code>{}</code>)</li>
@@ -220,7 +222,7 @@ public class CompileMojo extends AbstractMojo {
      * @since 2.0.0
      */
     @Parameter
-    protected FileSystems fileSystems = new FileSystems();
+    protected FileSystemsOptions fileSystems = new FileSystemsOptions();
 
     @Parameter
     protected CacheOptions cacheOptions = new CacheOptions();
@@ -305,13 +307,13 @@ public class CompileMojo extends AbstractMojo {
         logger.append("options.banner.text", options.banner.text);
         logger.append("options.globalVariables", options.globalVariables);
         logger.append("options.modifyVariables", options.modifyVariables);
-        logger.append("fileSystems.httpEnabled", fileSystems.httpEnabled);
-        logger.append("fileSystems.ftpEnabled", fileSystems.ftpEnabled);
         logger.append("fileSystems.classpathEnabled", fileSystems.classpathEnabled);
         logger.append("fileSystems.classpathLoadedDependenciesTypes", fileSystems.classpathDependenciesTypes);
+        logger.append("fileSystems.httpEnabled", fileSystems.httpEnabled);
+        logger.append("fileSystems.ftpEnabled", fileSystems.ftpEnabled);
         logger.append("fileSystems.localEnabled", fileSystems.localEnabled);
         logger.append("fileSystems.customs", fileSystems.customs, new FileSystemsCustomToStringConverter());
-        logger.append("cacheOptions.mode", cacheOptions.mode);
+        logger.append("cacheOptions.enabled", cacheOptions.enabled);
         logger.append("cacheOptions.cacheAlive", cacheOptions.cacheAlive);
         logger.append("cacheOptions.hashAlgorithm", cacheOptions.hashAlgorithm);
         logger.append("encoding", encoding);
@@ -433,7 +435,9 @@ public class CompileMojo extends AbstractMojo {
         } catch (final IOException e) {
             throw new MojoFailureException("Cannot prepare compiler configuration", e);
         }
-        // List<ExtendedFileSystemOption> systems = fileSystems.createFileSystems(!cacheOptions.isDisabled());
+        if (!cacheOptions.isEnabled()) {
+            lessOptions.setFileSystems(fileSystems.toFileSystemOptions());
+        }
         return lessOptions;
     }
 
