@@ -56,7 +56,7 @@ public class CachingFileSystemTest {
         parameters.put("cache-directory", "/root/directory");
         parameters.put("hash-algorithm", "md5");
         parameters.put("file-system", "org.example.FileSystem");
-        parameters.put("cache-redirection", "true");
+        parameters.put("cache-redirects", "true");
         parameters.put("cache-content", "true");
         parameters.put("proxy.param1", "value1");
         parameters.put("proxy.proxy.param2", "value2");
