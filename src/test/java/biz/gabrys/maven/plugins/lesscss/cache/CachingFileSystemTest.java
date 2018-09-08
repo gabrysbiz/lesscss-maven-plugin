@@ -158,7 +158,7 @@ public class CachingFileSystemTest {
     }
 
     @Test
-    public void exists_cacheContentEnabled_dataHasNotBeenCachedBefore() throws Exception {
+    public void exists_cacheContentEnabled_dataHasNotBeenCachedBefore_fileExists() throws Exception {
         final String path = "/dir/file.less";
         fileSystem.cacheContent = true;
         when(cacheStorage.hasExistent(path)).thenReturn(Boolean.FALSE);
@@ -168,7 +168,21 @@ public class CachingFileSystemTest {
 
         assertThat(result).isTrue();
         verify(cacheStorage).hasExistent(path);
-        verify(cacheStorage).saveExistent(path, result);
+        verifyNoMoreInteractions(cacheStorage);
+    }
+
+    @Test
+    public void exists_cacheContentEnabled_dataHasNotBeenCachedBefore_fileDoesNotExist() throws Exception {
+        final String path = "/dir/file.less";
+        fileSystem.cacheContent = true;
+        when(cacheStorage.hasExistent(path)).thenReturn(Boolean.FALSE);
+        when(proxiedFileSystem.exists(path)).thenReturn(Boolean.FALSE);
+
+        final boolean result = fileSystem.exists(path);
+
+        assertThat(result).isFalse();
+        verify(cacheStorage).hasExistent(path);
+        verify(cacheStorage).markAsNonExistent(path);
         verifyNoMoreInteractions(cacheStorage);
     }
 

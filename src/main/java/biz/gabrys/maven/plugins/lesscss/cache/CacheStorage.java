@@ -71,13 +71,8 @@ public class CacheStorage {
         return !createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME).exists();
     }
 
-    public void saveExistent(final String path, final boolean existent) throws IOException {
-        final File file = createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME);
-        if (existent) {
-            deleteIfExist(file);
-        } else {
-            createEmptyFile(file);
-        }
+    public void markAsNonExistent(final String path) throws IOException {
+        createEmptyFile(createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME));
     }
 
     public Collection<String> readDependencies(final String path) throws IOException {

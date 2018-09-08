@@ -111,8 +111,8 @@ public class CachingFileSystem implements FileSystem {
             return cacheStorage.isExistent(path);
         }
         final boolean result = proxiedFileSystem.exists(path);
-        if (cacheContent) {
-            cacheStorage.saveExistent(path, result);
+        if (cacheContent && !result) {
+            cacheStorage.markAsNonExistent(path);
         }
         return result;
     }
