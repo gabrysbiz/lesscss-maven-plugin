@@ -21,6 +21,8 @@ import java.util.Map.Entry;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileData;
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm;
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm.Hasher;
 
 public class CachingFileSystem implements FileSystem {
 
@@ -43,7 +45,7 @@ public class CachingFileSystem implements FileSystem {
     @Override
     public void configure(final Map<String, String> parameters) throws Exception {
         String cacheDirectory = null;
-        String hashAlgorithm = null;
+        Hasher hasher = null;
         String className = null;
         final Map<String, String> internalParameters = new LinkedHashMap<String, String>();
 
@@ -55,7 +57,7 @@ public class CachingFileSystem implements FileSystem {
             } else if (CACHE_DIRECTORY_PARAM.equals(name)) {
                 cacheDirectory = value;
             } else if (HASH_ALGORITHM_PARAM.equals(name)) {
-                hashAlgorithm = value;
+                hasher = HashAlgorithm.valueOf(value).getHasher();
             } else if (FILE_SYSTEM_PARAM.equals(name)) {
                 className = value;
             } else if (CACHE_REDIRECTS_PARAM.equals(name)) {
@@ -67,13 +69,13 @@ public class CachingFileSystem implements FileSystem {
             }
         }
 
-        cacheStorage = createCacheStorage(cacheDirectory, hashAlgorithm);
+        cacheStorage = createCacheStorage(cacheDirectory, hasher);
         proxiedFileSystem = createFileSystem(className);
         proxiedFileSystem.configure(internalParameters);
     }
 
-    protected CacheStorage createCacheStorage(final String cacheDirectory, final String hashAlgorithm) {
-        return new CacheStorage(cacheDirectory, hashAlgorithm);
+    protected CacheStorage createCacheStorage(final String cacheDirectory, final Hasher hasher) {
+        return new CacheStorage(cacheDirectory, hasher);
     }
 
     protected FileSystem createFileSystem(final String className) throws InstantiationException, IllegalAccessException,

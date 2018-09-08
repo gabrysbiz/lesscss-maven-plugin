@@ -22,7 +22,7 @@ public class ExtendedFileSystemOption extends FileSystemOption {
     private final boolean cacheRedirects;
     private final DateProviderConfig dateProviderConfig;
 
-    ExtendedFileSystemOption(final String className, final Map<String, String> parameters, final boolean cacheContent,
+    protected ExtendedFileSystemOption(final String className, final Map<String, String> parameters, final boolean cacheContent,
             final boolean cacheRedirects, final DateProviderConfig dateProviderConfig) {
 
         super(className, parameters);

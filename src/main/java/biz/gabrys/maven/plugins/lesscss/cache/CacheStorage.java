@@ -19,8 +19,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm.Hasher;
 
 public class CacheStorage {
 
@@ -34,12 +35,12 @@ public class CacheStorage {
     private static final String ENCODING = "UTF-8";
 
     private final String cacheDirectory;
-    private final String hashAlghoritm;
+    private final Hasher hasher;
     private final Map<String, String> idsCache;
 
-    public CacheStorage(final String cacheDirectory, final String hashAlghoritm) {
+    public CacheStorage(final String cacheDirectory, final Hasher hasher) {
         this.cacheDirectory = cacheDirectory;
-        this.hashAlghoritm = hashAlghoritm;
+        this.hasher = hasher;
         idsCache = new HashMap<String, String>();
     }
 
@@ -120,7 +121,22 @@ public class CacheStorage {
         }
     }
 
-    private void deleteIfExist(final File file) throws IOException {
+    private File createAbstractFile(final String path, final String filename) {
+        final StringBuilder file = new StringBuilder();
+        file.append(cacheDirectory);
+        file.append(File.separator);
+        String id = idsCache.get(path);
+        if (id == null) {
+            id = hasher.hash(path);
+            idsCache.put(path, id);
+        }
+        file.append(id);
+        file.append(File.separator);
+        file.append(filename);
+        return new File(file.toString());
+    }
+
+    private static void deleteIfExist(final File file) throws IOException {
         if (!file.exists()) {
             return;
         }
@@ -140,39 +156,9 @@ public class CacheStorage {
         throw new IOException("Cannot delete file (supports only files and directories): " + file.getAbsolutePath());
     }
 
-    private void createEmptyFile(final File file) throws IOException {
+    private static void createEmptyFile(final File file) throws IOException {
         if (!file.createNewFile()) {
             throw new IOException("Cannot create file: " + file.getAbsolutePath());
         }
-    }
-
-    private File createAbstractFile(final String path, final String filename) {
-        final StringBuilder file = new StringBuilder();
-        file.append(cacheDirectory);
-        file.append(File.separator);
-        String id = idsCache.get(path);
-        if (id == null) {
-            id = createId(path);
-            idsCache.put(path, id);
-        }
-        file.append(id);
-        file.append(File.separator);
-        file.append(filename);
-        return new File(file.toString());
-    }
-
-    private String createId(final String path) {
-        if ("md5".equals(hashAlghoritm)) {
-            return DigestUtils.md5Hex(path);
-        } else if ("sha1".equals(hashAlghoritm)) {
-            return DigestUtils.sha1Hex(path);
-        } else if ("sha256".equals(hashAlghoritm)) {
-            return DigestUtils.sha256Hex(path);
-        } else if ("sha384".equals(hashAlghoritm)) {
-            return DigestUtils.sha384Hex(path);
-        } else if ("sha512".equals(hashAlghoritm)) {
-            return DigestUtils.sha512Hex(path);
-        }
-        throw new IllegalArgumentException(String.format("Unsupported hash algorithm: %s", hashAlghoritm));
     }
 }

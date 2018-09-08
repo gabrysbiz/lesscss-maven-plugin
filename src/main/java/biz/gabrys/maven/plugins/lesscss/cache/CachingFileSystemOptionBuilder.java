@@ -13,28 +13,27 @@
 package biz.gabrys.maven.plugins.lesscss.cache;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Map.Entry;
 
+import biz.gabrys.lesscss.compiler2.BuilderCreationException;
 import biz.gabrys.lesscss.compiler2.FileSystemOption;
 import biz.gabrys.lesscss.compiler2.FileSystemOptionBuilder;
 import biz.gabrys.maven.plugins.lesscss.config.ExtendedFileSystemOption;
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm;
 
 public class CachingFileSystemOptionBuilder {
 
     private final FileSystemOptionBuilder builder = new FileSystemOptionBuilder();
-
-    public CachingFileSystemOptionBuilder cacheDirectory(final File directory) {
-        builder.appendParameter(CachingFileSystem.CACHE_DIRECTORY_PARAM, directory.getAbsolutePath());
-        return this;
-    }
 
     public CachingFileSystemOptionBuilder baseFile(final File file) {
         builder.appendParameter(CachingFileSystem.BASE_FILE_PARAM, file.getAbsolutePath());
         return this;
     }
 
-    public CachingFileSystemOptionBuilder hashAlgorithm(final String algorithm) {
-        builder.appendParameter(CachingFileSystem.HASH_ALGORITHM_PARAM, algorithm);
+    public CachingFileSystemOptionBuilder cache(final File directory, final HashAlgorithm algorithm) {
+        builder.appendParameter(CachingFileSystem.CACHE_DIRECTORY_PARAM, directory.getAbsolutePath());
+        builder.appendParameter(CachingFileSystem.HASH_ALGORITHM_PARAM, algorithm.name());
         return this;
     }
 
@@ -49,6 +48,17 @@ public class CachingFileSystemOptionBuilder {
     }
 
     public FileSystemOption build() {
-        return builder.withClass(CachingFileSystem.class).build();
+        final FileSystemOption option = builder.withClass(CachingFileSystem.class).build();
+        final Map<String, String> parameters = option.getParameters();
+        if (!parameters.containsKey(CachingFileSystem.BASE_FILE_PARAM)) {
+            throw new BuilderCreationException("You forgot to execute \"baseFile\" method");
+        }
+        if (!parameters.containsKey(CachingFileSystem.CACHE_DIRECTORY_PARAM)) {
+            throw new BuilderCreationException("You forgot to execute \"cache\" method");
+        }
+        if (!parameters.containsKey(CachingFileSystem.CACHE_CONTENT_PARAM)) {
+            throw new BuilderCreationException("You forgot to execute \"fileSystemOption\" method");
+        }
+        return option;
     }
 }

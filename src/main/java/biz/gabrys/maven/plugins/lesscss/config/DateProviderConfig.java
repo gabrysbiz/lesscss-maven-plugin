@@ -20,7 +20,7 @@ public class DateProviderConfig {
     private final String methodName;
     private final boolean staticMethod;
 
-    DateProviderConfig(final String className, final String methodName, final boolean staticMethod) {
+    protected DateProviderConfig(final String className, final String methodName, final boolean staticMethod) {
         if (StringUtils.isBlank(className)) {
             throw new IllegalArgumentException("Class name cannot be blank");
         }
@@ -61,6 +61,6 @@ public class DateProviderConfig {
             return false;
         }
         final DateProviderConfig other = (DateProviderConfig) obj;
-        return className.equals(other.className) && methodName.equals(other.methodName) && staticMethod == other.staticMethod;
+        return staticMethod == other.staticMethod && className.equals(other.className) && methodName.equals(other.methodName);
     }
 }

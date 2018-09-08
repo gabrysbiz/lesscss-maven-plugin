@@ -2,6 +2,7 @@ package biz.gabrys.maven.plugins.lesscss.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -26,6 +27,8 @@ import org.mockito.ArgumentCaptor;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileData;
 import biz.gabrys.lesscss.compiler2.filesystem.FileSystem;
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm;
+import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm.Hasher;
 
 public class CachingFileSystemTest {
 
@@ -48,13 +51,13 @@ public class CachingFileSystemTest {
     public void configure() throws Exception {
         fileSystem.cacheStorage = null;
         fileSystem.proxiedFileSystem = null;
-        doReturn(cacheStorage).when(fileSystem).createCacheStorage(anyString(), anyString());
+        doReturn(cacheStorage).when(fileSystem).createCacheStorage(anyString(), any(Hasher.class));
         doReturn(proxiedFileSystem).when(fileSystem).createFileSystem(anyString());
 
         final Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("base-file", "/root/file.less");
         parameters.put("cache-directory", "/root/directory");
-        parameters.put("hash-algorithm", "md5");
+        parameters.put("hash-algorithm", HashAlgorithm.MD5.name());
         parameters.put("file-system", "org.example.FileSystem");
         parameters.put("cache-redirects", "true");
         parameters.put("cache-content", "true");
@@ -69,7 +72,7 @@ public class CachingFileSystemTest {
         assertThat(fileSystem.cacheRedirects).isTrue();
         assertThat(fileSystem.cacheContent).isTrue();
 
-        verify(fileSystem).createCacheStorage("/root/directory", "md5");
+        verify(fileSystem).createCacheStorage("/root/directory", HashAlgorithm.MD5.getHasher());
         verify(fileSystem).createFileSystem("org.example.FileSystem");
         @SuppressWarnings("unchecked")
         final ArgumentCaptor<Map<String, String>> captor = ArgumentCaptor.forClass(Map.class);
