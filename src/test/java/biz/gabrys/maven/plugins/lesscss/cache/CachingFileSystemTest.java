@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -22,7 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
 import biz.gabrys.lesscss.compiler2.filesystem.FileData;
@@ -34,12 +37,15 @@ public class CachingFileSystemTest {
 
     private CachingFileSystem fileSystem;
     private FileSystem proxiedFileSystem;
-    private CacheStorage cacheStorage;
+    private CachingFileSystemStorage cacheStorage;
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setup() throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException,
             ClassNotFoundException {
-        cacheStorage = mock(CacheStorage.class);
+        cacheStorage = mock(CachingFileSystemStorage.class);
         proxiedFileSystem = mock(FileSystem.class);
 
         fileSystem = spy(CachingFileSystem.class);
@@ -182,7 +188,7 @@ public class CachingFileSystemTest {
 
         assertThat(result).isFalse();
         verify(cacheStorage).hasExistent(path);
-        verify(cacheStorage).markAsNonExistent(path);
+        verify(cacheStorage).saveAsNonExistent(path);
         verifyNoMoreInteractions(cacheStorage);
     }
 
@@ -212,12 +218,14 @@ public class CachingFileSystemTest {
         final FileData result = fileSystem.fetch(path);
 
         assertThat(result).isSameAs(fileData);
+        verify(fileSystem, times(0)).validateExistence(path);
         verifyNoMoreInteractions(cacheStorage);
     }
 
     @Test
     public void fetch_cacheContentEnabled_contentHasNotBeenCachedBefore() throws Exception {
         final String path = "/dir/file.less";
+        doNothing().when(fileSystem).validateExistence(path);
         doNothing().when(fileSystem).updateDependencies(path);
         fileSystem.cacheContent = true;
         final byte[] content = new byte[0];
@@ -229,7 +237,8 @@ public class CachingFileSystemTest {
 
         assertThat(result).isSameAs(fileData);
 
-        verify(cacheStorage).readContent(path);
+        verify(fileSystem).validateExistence(path);
+        verify(cacheStorage).hasContent(path);
         verify(cacheStorage).saveContent(path, content);
         verify(cacheStorage).saveEncoding(path, encoding);
         verifyNoMoreInteractions(cacheStorage);
@@ -238,16 +247,20 @@ public class CachingFileSystemTest {
     @Test
     public void fetch_cacheContentEnabled_contentHasBeenCachedBefore() throws Exception {
         final String path = "/dir/file.less";
+        doNothing().when(fileSystem).validateExistence(path);
         doNothing().when(fileSystem).updateDependencies(path);
         fileSystem.cacheContent = true;
         final byte[] content = new byte[0];
         final String encoding = "encoding";
+        when(cacheStorage.hasContent(path)).thenReturn(Boolean.TRUE);
         when(cacheStorage.readContent(path)).thenReturn(content);
         when(cacheStorage.readEncoding(path)).thenReturn(encoding);
 
         final FileData result = fileSystem.fetch(path);
 
         assertThat(result).isEqualTo(new FileData(content, encoding));
+        verify(fileSystem).validateExistence(path);
+        verify(cacheStorage).hasContent(path);
         verify(cacheStorage).readContent(path);
         verify(cacheStorage).readEncoding(path);
         verifyNoMoreInteractions(cacheStorage);
@@ -255,24 +268,70 @@ public class CachingFileSystemTest {
     }
 
     @Test
-    public void updateDependencies_dependenciesDoNotContainPath() throws IOException {
+    public void validateExistence_existenceHasNotBeenCachedBefore_doesNothing() throws IOException {
+        final String path = "path";
+        when(cacheStorage.hasExistent(path)).thenReturn(Boolean.FALSE);
+
+        fileSystem.validateExistence(path);
+    }
+
+    @Test
+    public void validateExistence_existenceHasBeenCachedBefore_fileExists_doesNothing() throws IOException {
+        final String path = "path";
+        when(cacheStorage.hasExistent(path)).thenReturn(Boolean.TRUE);
+        when(cacheStorage.isExistent(path)).thenReturn(Boolean.TRUE);
+
+        fileSystem.validateExistence(path);
+    }
+
+    @Test
+    public void validateExistence_existenceHasBeenCachedBefore_fileDoesNotExist_pathIsDifferentThanBaseFile_throwsException()
+            throws IOException {
+        final String path = "file.less";
+        fileSystem.baseFile = "base.less";
+        when(cacheStorage.hasExistent(path)).thenReturn(Boolean.TRUE);
+        when(cacheStorage.isExistent(path)).thenReturn(Boolean.FALSE);
+
+        exception.expect(IOException.class);
+        exception.expectMessage("File file.less does not exist (information read from cache).");
+
+        fileSystem.validateExistence(path);
+    }
+
+    @Test
+    public void validateExistence_existenceHasBeenCachedBefore_fileDoesNotExist_pathIsTheSameAsBaseFile_throwsException()
+            throws IOException {
+        final String path = "file.less";
+        fileSystem.baseFile = path;
+        when(cacheStorage.hasExistent(path)).thenReturn(Boolean.TRUE);
+        when(cacheStorage.isExistent(path)).thenReturn(Boolean.FALSE);
+
+        exception.expect(IOException.class);
+        exception.expectMessage("Cache data is corrupted. Clear the cache and try one more time.");
+
+        fileSystem.validateExistence(path);
+    }
+
+    @Test
+    public void updateDependencies_dependenciesDoNotContainPath_appendsDependency() throws IOException {
         final String path = "/dir/file.less";
         final String baseFile = "/dir/base.less";
         fileSystem.baseFile = baseFile;
-        final Collection<String> dependencies = new ArrayList<String>(Arrays.asList("/dir/dept.less"));
+        final String dependency = "/dir/dept.less";
+        final Collection<String> dependencies = new ArrayList<String>(Arrays.asList(dependency));
         when(cacheStorage.readDependencies(baseFile)).thenReturn(dependencies);
 
         fileSystem.updateDependencies(path);
 
+        assertThat(dependencies).containsOnly(path, dependency);
         verify(cacheStorage).readDependencies(baseFile);
         verify(cacheStorage).saveDependencies(baseFile, dependencies);
         verifyNoMoreInteractions(cacheStorage);
     }
 
     @Test
-    public void updateDependencies_dependenciesContainPath() throws IOException {
+    public void updateDependencies_dependenciesContainPath_doesNothing() throws IOException {
         final String path = "/dir/file.less";
-
         final String baseFile = "/dir/base.less";
         fileSystem.baseFile = baseFile;
         final Collection<String> dependencies = Arrays.asList("/dir/dept.less", path);
@@ -282,5 +341,14 @@ public class CachingFileSystemTest {
 
         verify(cacheStorage).readDependencies(baseFile);
         verifyNoMoreInteractions(cacheStorage);
+    }
+
+    @Test
+    public void updateDependencies_pathIsEqualToBaseFile_doesNothing() throws IOException {
+        final String path = "/dir/base.less";
+        fileSystem.baseFile = path;
+
+        fileSystem.updateDependencies(path);
+        verifyZeroInteractions(cacheStorage);
     }
 }

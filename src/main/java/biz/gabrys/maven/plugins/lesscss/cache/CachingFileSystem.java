@@ -38,7 +38,7 @@ public class CachingFileSystem implements FileSystem {
 
     protected String baseFile;
     protected FileSystem proxiedFileSystem;
-    protected CacheStorage cacheStorage;
+    protected CachingFileSystemStorage cacheStorage;
     protected boolean cacheRedirects;
     protected boolean cacheContent;
 
@@ -74,8 +74,8 @@ public class CachingFileSystem implements FileSystem {
         proxiedFileSystem.configure(internalParameters);
     }
 
-    protected CacheStorage createCacheStorage(final String cacheDirectory, final Hasher hasher) {
-        return new CacheStorage(cacheDirectory, hasher);
+    protected CachingFileSystemStorage createCacheStorage(final String cacheDirectory, final Hasher hasher) {
+        return new CachingFileSystemStorage(cacheDirectory, hasher);
     }
 
     protected FileSystem createFileSystem(final String className) throws InstantiationException, IllegalAccessException,
@@ -112,19 +112,20 @@ public class CachingFileSystem implements FileSystem {
         }
         final boolean result = proxiedFileSystem.exists(path);
         if (cacheContent && !result) {
-            cacheStorage.markAsNonExistent(path);
+            cacheStorage.saveAsNonExistent(path);
         }
         return result;
     }
 
     @Override
     public FileData fetch(final String path) throws Exception {
+        if (cacheContent) {
+            validateExistence(path);
+        }
         updateDependencies(path);
         if (cacheContent) {
-            final byte[] content = cacheStorage.readContent(path);
-            if (content != null) {
-                final String encoding = cacheStorage.readEncoding(path);
-                return new FileData(content, encoding);
+            if (cacheStorage.hasContent(path)) {
+                return new FileData(cacheStorage.readContent(path), cacheStorage.readEncoding(path));
             }
             final FileData fileData = proxiedFileSystem.fetch(path);
             cacheStorage.saveContent(path, fileData.getContent());
@@ -134,7 +135,20 @@ public class CachingFileSystem implements FileSystem {
         return proxiedFileSystem.fetch(path);
     }
 
+    protected void validateExistence(final String path) throws IOException {
+        if (cacheStorage.hasExistent(path) && !cacheStorage.isExistent(path)) {
+            if (baseFile.equals(path)) {
+                throw new IOException("Cache data is corrupted. Clear the cache and try one more time.");
+            }
+            throw new IOException(String.format("File %s does not exist (information read from cache).", path));
+        }
+    }
+
     protected void updateDependencies(final String path) throws IOException {
+        if (baseFile.equals(path)) {
+            return;
+        }
+
         final Collection<String> dependencies = cacheStorage.readDependencies(baseFile);
         if (!dependencies.contains(path)) {
             dependencies.add(path);
