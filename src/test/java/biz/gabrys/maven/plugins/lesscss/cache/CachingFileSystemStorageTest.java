@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm.Hasher;
-import biz.gabrys.maven.plugins.lesscss.io.IOStorage;
+import biz.gabrys.maven.plugins.lesscss.io.FileManager;
 
 public class CachingFileSystemStorageTest {
 
@@ -29,7 +29,7 @@ public class CachingFileSystemStorageTest {
 
     private CachingFileSystemStorage storage;
     private Hasher hasher;
-    private IOStorage ioStorage;
+    private FileManager fileManager;
 
     @Before
     public void setup() {
@@ -40,8 +40,8 @@ public class CachingFileSystemStorageTest {
                 return CachingFileSystemStorageTest.hash(text);
             }
         });
-        ioStorage = mock(IOStorage.class);
-        storage = spy(new CachingFileSystemStorage(CACHE_DIRECTORY, hasher, ioStorage));
+        fileManager = mock(FileManager.class);
+        storage = spy(new CachingFileSystemStorage(CACHE_DIRECTORY, hasher, fileManager));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class CachingFileSystemStorageTest {
         final File file = mock(File.class);
         when(file.exists()).thenReturn(Boolean.TRUE);
         doReturn(file).when(storage).createAbstractFile(path, "redirection.txt");
-        when(ioStorage.readString(file)).thenReturn(savedPath);
+        when(fileManager.readString(file)).thenReturn(savedPath);
 
         final String result = storage.getRedirection(path);
 
@@ -100,8 +100,8 @@ public class CachingFileSystemStorageTest {
 
         storage.saveRedirection(path, path);
 
-        verify(ioStorage).createEmptyFile(marker);
-        verifyNoMoreInteractions(ioStorage);
+        verify(fileManager).createEmptyFile(marker);
+        verifyNoMoreInteractions(fileManager);
     }
 
     @Test
@@ -115,9 +115,9 @@ public class CachingFileSystemStorageTest {
 
         storage.saveRedirection(path, directPath);
 
-        verify(ioStorage).createEmptyFile(marker);
-        verify(ioStorage).writeString(redirection, directPath);
-        verifyNoMoreInteractions(ioStorage);
+        verify(fileManager).createEmptyFile(marker);
+        verify(fileManager).writeString(redirection, directPath);
+        verifyNoMoreInteractions(fileManager);
     }
 
     @Test
@@ -190,8 +190,8 @@ public class CachingFileSystemStorageTest {
 
         storage.saveAsNonExistent(path);
 
-        verify(ioStorage).createEmptyFile(marker);
-        verifyNoMoreInteractions(ioStorage);
+        verify(fileManager).createEmptyFile(marker);
+        verifyNoMoreInteractions(fileManager);
     }
 
     @Test
@@ -215,7 +215,7 @@ public class CachingFileSystemStorageTest {
         doReturn(dependenciesFile).when(storage).createAbstractFile(path, "dependencies.txt");
         final String dependency1 = "dept1.less";
         final String dependency2 = "dept2.less";
-        when(ioStorage.readLines(dependenciesFile)).thenReturn(Arrays.asList(dependency1, dependency2));
+        when(fileManager.readLines(dependenciesFile)).thenReturn(Arrays.asList(dependency1, dependency2));
 
         final Collection<String> result = storage.readDependencies(path);
 
@@ -235,7 +235,7 @@ public class CachingFileSystemStorageTest {
 
         @SuppressWarnings("unchecked")
         final ArgumentCaptor<Collection<String>> sortedDependencies = ArgumentCaptor.forClass(Collection.class);
-        verify(ioStorage).writeLines(eq(dependenciesFile), sortedDependencies.capture());
+        verify(fileManager).writeLines(eq(dependenciesFile), sortedDependencies.capture());
         assertThat(sortedDependencies.getValue()).containsExactly("A.less", "B.less", "C.less");
     }
 
@@ -268,7 +268,7 @@ public class CachingFileSystemStorageTest {
         final File contentFile = mock(File.class);
         doReturn(contentFile).when(storage).createAbstractFile(path, "content.bin");
         final byte[] data = new byte[] { 1, 2, 3 };
-        when(ioStorage.readByteArray(contentFile)).thenReturn(data);
+        when(fileManager.readByteArray(contentFile)).thenReturn(data);
 
         final byte[] result = storage.readContent(path);
 
@@ -284,7 +284,7 @@ public class CachingFileSystemStorageTest {
 
         storage.saveContent(path, data);
 
-        verify(ioStorage).writeByteArray(contentFile, data);
+        verify(fileManager).writeByteArray(contentFile, data);
     }
 
     @Test
@@ -294,7 +294,7 @@ public class CachingFileSystemStorageTest {
         when(encodingFile.exists()).thenReturn(Boolean.TRUE);
         doReturn(encodingFile).when(storage).createAbstractFile(path, "encoding.txt");
         final String encoding = "encoding";
-        when(ioStorage.readString(encodingFile)).thenReturn(encoding);
+        when(fileManager.readString(encodingFile)).thenReturn(encoding);
 
         final String result = storage.readEncoding(path);
 
@@ -332,7 +332,7 @@ public class CachingFileSystemStorageTest {
 
         storage.saveEncoding(path, encoding);
 
-        verify(ioStorage).writeString(encodingFile, encoding);
+        verify(fileManager).writeString(encodingFile, encoding);
     }
 
     @Test

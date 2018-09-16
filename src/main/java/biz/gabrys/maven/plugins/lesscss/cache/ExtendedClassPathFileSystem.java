@@ -14,6 +14,7 @@ package biz.gabrys.maven.plugins.lesscss.cache;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Date;
 
 import biz.gabrys.lesscss.compiler2.filesystem.ClassPathFileSystem;
@@ -26,6 +27,14 @@ public class ExtendedClassPathFileSystem extends ClassPathFileSystem implements 
         if (url == null) {
             return null;
         }
-        return new Date(url.openConnection().getLastModified());
+        final long lastModified = makeConnection(url).getLastModified();
+        if (lastModified == 0) {
+            return null;
+        }
+        return new Date(lastModified);
+    }
+
+    protected URLConnection makeConnection(final URL url) throws IOException {
+        return url.openConnection();
     }
 }

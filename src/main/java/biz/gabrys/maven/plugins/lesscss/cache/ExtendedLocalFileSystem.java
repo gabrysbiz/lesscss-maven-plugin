@@ -21,10 +21,14 @@ public class ExtendedLocalFileSystem extends LocalFileSystem implements LastModi
 
     @Override
     public Date getLastModified(final String path) {
-        final long date = new File(path).lastModified();
-        if (date > 0) {
+        final long date = getLastModified(new File(path));
+        if (date != 0) {
             return new Date(date);
         }
         return null;
+    }
+
+    protected long getLastModified(final File file) {
+        return file.lastModified();
     }
 }

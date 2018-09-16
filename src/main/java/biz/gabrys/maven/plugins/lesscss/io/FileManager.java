@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-public class IOStorage {
+public class FileManager {
 
     private static final Charset CHARSET = Charset.defaultCharset();
 
@@ -48,29 +48,29 @@ public class IOStorage {
         FileUtils.writeByteArrayToFile(file, data);
     }
 
+    public void createEmptyFile(final File file) throws IOException {
+        if (!file.createNewFile()) {
+            throw new IOException("Cannot create file: " + file.getAbsolutePath());
+        }
+    }
+
     public void delete(final File file) throws IOException {
         if (!file.exists()) {
             return;
         }
 
         if (file.isFile()) {
-            if (!file.delete()) {
-                throw new IOException("Cannot delete file: " + file.getAbsolutePath());
-            }
-            return;
-        }
-
-        if (file.isDirectory()) {
+            deleteFile(file);
+        } else if (file.isDirectory()) {
             deleteDirectory(file);
-            return;
+        } else {
+            throw new IOException(String.format("Cannot delete %s (supports only files and directories)", file.getAbsolutePath()));
         }
-
-        throw new IOException("Cannot delete file (supports only files and directories): " + file.getAbsolutePath());
     }
 
-    public void createEmptyFile(final File file) throws IOException {
-        if (!file.createNewFile()) {
-            throw new IOException("Cannot create file: " + file.getAbsolutePath());
+    protected void deleteFile(final File file) throws IOException {
+        if (!file.delete()) {
+            throw new IOException("Cannot delete file: " + file.getAbsolutePath());
         }
     }
 

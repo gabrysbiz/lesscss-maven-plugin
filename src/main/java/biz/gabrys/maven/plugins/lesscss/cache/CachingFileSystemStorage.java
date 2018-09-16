@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import biz.gabrys.maven.plugins.lesscss.config.HashAlgorithm.Hasher;
-import biz.gabrys.maven.plugins.lesscss.io.IOStorage;
+import biz.gabrys.maven.plugins.lesscss.io.FileManager;
 
 public class CachingFileSystemStorage {
 
@@ -36,17 +36,17 @@ public class CachingFileSystemStorage {
 
     protected final String cacheDirectory;
     protected final Hasher hasher;
-    protected final IOStorage storage;
+    protected final FileManager fileManager;
     protected final Map<String, String> idsCache = new HashMap<String, String>();
 
     public CachingFileSystemStorage(final String cacheDirectory, final Hasher hasher) {
-        this(cacheDirectory, hasher, new IOStorage());
+        this(cacheDirectory, hasher, new FileManager());
     }
 
-    protected CachingFileSystemStorage(final String cacheDirectory, final Hasher hasher, final IOStorage storage) {
+    protected CachingFileSystemStorage(final String cacheDirectory, final Hasher hasher, final FileManager fileManager) {
         this.cacheDirectory = cacheDirectory;
         this.hasher = hasher;
-        this.storage = storage;
+        this.fileManager = fileManager;
     }
 
     public boolean hasRedirection(final String path) {
@@ -56,15 +56,15 @@ public class CachingFileSystemStorage {
     public String getRedirection(final String path) throws IOException {
         final File file = createAbstractFile(path, REDIRECTION_FILE_NAME);
         if (file.exists()) {
-            return storage.readString(file);
+            return fileManager.readString(file);
         }
         return path;
     }
 
     public void saveRedirection(final String path, final String redirect) throws IOException {
-        storage.createEmptyFile(createAbstractFile(path, REDIRECTION_MARKER_FILE_NAME));
+        fileManager.createEmptyFile(createAbstractFile(path, REDIRECTION_MARKER_FILE_NAME));
         if (!path.equals(redirect)) {
-            storage.writeString(createAbstractFile(path, REDIRECTION_FILE_NAME), redirect);
+            fileManager.writeString(createAbstractFile(path, REDIRECTION_FILE_NAME), redirect);
         }
     }
 
@@ -77,13 +77,13 @@ public class CachingFileSystemStorage {
     }
 
     public void saveAsNonExistent(final String path) throws IOException {
-        storage.createEmptyFile(createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME));
+        fileManager.createEmptyFile(createAbstractFile(path, NON_EXISTENCE_MARKER_FILE_NAME));
     }
 
     public Collection<String> readDependencies(final String path) throws IOException {
         final File file = createAbstractFile(path, DEPENDENCIES_FILE_NAME);
         if (file.exists()) {
-            return new HashSet<String>(storage.readLines(file));
+            return new HashSet<String>(fileManager.readLines(file));
         }
         return new HashSet<String>();
     }
@@ -91,7 +91,7 @@ public class CachingFileSystemStorage {
     public void saveDependencies(final String path, final Collection<String> dependencies) throws IOException {
         final List<String> sortedDependencies = new ArrayList<String>(dependencies);
         Collections.sort(sortedDependencies);
-        storage.writeLines(createAbstractFile(path, DEPENDENCIES_FILE_NAME), sortedDependencies);
+        fileManager.writeLines(createAbstractFile(path, DEPENDENCIES_FILE_NAME), sortedDependencies);
     }
 
     public boolean hasContent(final String path) {
@@ -99,24 +99,24 @@ public class CachingFileSystemStorage {
     }
 
     public byte[] readContent(final String path) throws IOException {
-        return storage.readByteArray(createAbstractFile(path, CONTENT_FILE_NAME));
+        return fileManager.readByteArray(createAbstractFile(path, CONTENT_FILE_NAME));
     }
 
     public void saveContent(final String path, final byte[] data) throws IOException {
-        storage.writeByteArray(createAbstractFile(path, CONTENT_FILE_NAME), data);
+        fileManager.writeByteArray(createAbstractFile(path, CONTENT_FILE_NAME), data);
     }
 
     public String readEncoding(final String path) throws IOException {
         final File file = createAbstractFile(path, ENCODING_FILE_NAME);
         if (file.exists()) {
-            return storage.readString(file);
+            return fileManager.readString(file);
         }
         return null;
     }
 
     public void saveEncoding(final String path, final String encoding) throws IOException {
         if (encoding != null) {
-            storage.writeString(createAbstractFile(path, ENCODING_FILE_NAME), encoding);
+            fileManager.writeString(createAbstractFile(path, ENCODING_FILE_NAME), encoding);
         }
     }
 

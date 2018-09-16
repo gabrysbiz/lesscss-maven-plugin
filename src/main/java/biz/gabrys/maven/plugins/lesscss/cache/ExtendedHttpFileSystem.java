@@ -27,7 +27,10 @@ public class ExtendedHttpFileSystem extends HttpFileSystem implements LastModifi
         try {
             connection = makeConnection(new URL(path), false);
             if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
-                return new Date(connection.getLastModified());
+                final long lastModified = connection.getLastModified();
+                if (lastModified != 0) {
+                    return new Date(lastModified);
+                }
             }
             return null;
         } finally {
